@@ -186,6 +186,93 @@ def getobj(conn):
     return data
 
 
+def output_code_begin(drawing_name):
+    """
+    Returns the header lines of the generated Python script.
+    """
+    lines = []
+    lines.append("import os")
+    lines.append("from N2G import drawio_diagram")
+    lines.append(f"styles_dir = os.environ.get('STYLES', '.')")
+    lines.append("diagram = drawio_diagram()")
+    lines.append('diagram.add_diagram("Page-1")')
+    lines.append("")
+    
+    return lines
+    
+
+def output_code_nodes(db_obj_data, drawing_content):
+    """
+    Returns the add_node lines of the generated Python script.
+    """
+    lines = []
+    auto_x = 300
+    auto_y = 300
+
+    for name, ip, main_role, other_roles in db_obj_data:
+
+        if name in drawing_content:
+            _, x_pos, y_pos, width, height = drawing_content[name]
+            eprint.debug_eprint(f"[DRAWIO] {name} found in drawing at x={x_pos} y={y_pos}")
+        else:
+            x_pos  = str(auto_x)
+            y_pos  = str(auto_y)
+            width  = "60"
+            height = "60"
+            auto_x += 100
+            auto_y += 100
+            eprint.debug_eprint(f"[DRAWIO] {name} not found, auto-positioned at x={x_pos} y={y_pos}")
+
+        style_file = f"styles_dir + '/{main_role}.txt'"
+
+        lines.append(
+            f'diagram.add_node('
+            f'id="{name}", '
+            f'label="{name}", '
+            f'style={style_file}, '
+            f'x_pos="{x_pos}", '
+            f'y_pos="{y_pos}", '
+            f'width="{width}", '
+            f'height="{height}", '
+            f'data={{"ip": "{ip or ""}", "role": "{main_role}", "other_roles": "{other_roles or ""}"}})'
+        )
+        eprint.debug_eprint(f"[DRAWIO] node line added: {name} role={main_role}")
+
+    lines.append("")
+    
+    return lines
+    
+    
+def output_code_end(drawing_file_name):
+    """
+    Returns the footer lines of the generated Python script.
+    """
+    folder   = os.path.dirname(drawing_file_name) or "./"
+    filename = os.path.basename(drawing_file_name)
+    lines = []
+    lines.append(f'diagram.dump_file(filename="{filename}", folder="{folder}")')
+    
+    return lines
+    
+    
+def write_script(drawing_name, drawing_file_name, db_obj_data, drawing_content):
+    """
+    Assembles and writes the generated Python script to file.
+    """
+    script_file = drawing_name + ".py"
+
+    lines  = output_code_begin(drawing_name)
+    lines += output_code_nodes(db_obj_data, drawing_content)
+    lines += output_code_end(drawing_file_name)
+
+    with open(script_file, "w") as f:
+        f.write("\n".join(lines))
+
+    eprint.debug_eprint(f"[SCRIPT] written: {script_file}")
+    
+    print(f"[OK] Script generated: {script_file}")
+    
+    
 def main():
     """Main function."""
     args = get_cli_arguments().parse_args()
@@ -214,8 +301,9 @@ def main():
         drawing_content = read_drawio(drawing_file_name)
         # Read obj data from db
         db_obj_data = getobj(db_conn)
-
-        # TODO: generate Draw.io  → drawing_file_name
+        # Swrite script to generate Draw.io
+        write_script(drawing_name, drawing_file_name, db_obj_data, drawing_content)
+        
         # TODO: generate firewall → if firewall_output
 
     except FileNotFoundError as err:
