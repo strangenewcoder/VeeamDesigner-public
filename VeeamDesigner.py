@@ -6,6 +6,8 @@ import argparse
 import os
 import sqlite3
 import sys
+import xml.etree.ElementTree as ET
+from bs4 import BeautifulSoup
 import eprint
 
 
@@ -88,8 +90,100 @@ def loadsystems(file_name, drawing_name, conn):
                 )
                 rows_loaded += 1
 
+    # loading the mappings
+    cursor.execute("DELETE FROM mappings;")
+    cursor.execute("""
+        INSERT INTO mappings (from_name, from_role, to_name, to_role)
+        SELECT DISTINCT
+            s_from.name AS from_name,
+            s_from.role AS from_role,
+            s_to.name   AS to_name,
+            s_to.role   AS to_role
+        FROM systems s_from
+        JOIN ports_definitions p ON s_from.role = p.from_role
+        JOIN systems s_to        ON s_to.role   = p.to_role
+        WHERE s_from.name != s_to.name
+    """)
+
     conn.commit()
     eprint.eprint(f"[INFO] Loaded {rows_loaded} rows for drawing '{drawing_name}'.")
+
+
+def read_drawio(file_name):
+    """
+    Read and parse a drawio file.
+    Returns a dictionary keyed by object id:
+    {id: (label, x, y, width, height, style)}
+    """
+    result = {}
+
+    if not os.path.exists(file_name):
+        return result
+
+    tree = ET.parse(file_name)
+    root = tree.getroot()
+
+    for obj in root.findall(".//object"):
+        obj_id = obj.get("id")
+        if not obj_id:
+            continue
+
+        geo = obj.find(".//mxGeometry")
+        if geo is None:
+            continue
+
+        tmp_width = geo.get("width")
+        tmp_height = geo.get("height")
+        if not tmp_width or not tmp_height:
+            continue
+
+        # strip HTML from label
+        soup = BeautifulSoup(obj.get("label", ""), "html.parser")
+        obj_label = soup.text
+
+        # truncate floats to int
+        coord_x = geo.get("x", "0").split(".")[0]
+        coord_y = geo.get("y", "0").split(".")[0]
+        width = tmp_width.split(".")[0]
+        height = tmp_height.split(".")[0]
+
+        # obj_cell = obj.find(".//mxCell")
+        # style = obj_cell.get("style") if obj_cell is not None else ""
+
+        result[obj_id] = (obj_label, coord_x, coord_y, width, height)
+
+        eprint.debug_eprint(
+            f"[DRAWIO] id={obj_id} label={obj_label} x={coord_x} y={coord_y} w={width} h={height}"
+        )
+
+    return result
+
+
+def getobj(conn):
+    """
+    Returns a list of systems with their main role and secondary roles.
+    Each row: (name, ip, main_role, other_roles)
+    """
+    curs = conn.cursor()
+    curs.execute("""
+        SELECT
+            s_main.name,
+            s_main.ip,
+            s_main.role                      AS main_role,
+            GROUP_CONCAT(s_other.role, ', ') AS other_roles
+        FROM systems s_main
+        LEFT JOIN systems s_other
+            ON  s_other.name     = s_main.name
+            AND s_other.mainrole = 0
+        WHERE s_main.mainrole = 1
+        GROUP BY s_main.name, s_main.ip, s_main.role
+    """)
+    data = curs.fetchall()
+    curs.close()
+
+    eprint.debug_epprint(data)
+
+    return data
 
 
 def main():
@@ -101,7 +195,7 @@ def main():
     drawio_output = args.drawio
     firewall_output = args.firewall
 
-    eprint.set_debug(False)
+    eprint.set_debug(True)
 
     eprint.eprint(f"[INFO] Project         : {project_name}")
     eprint.eprint(f"[INFO] Drawing         : {drawing_name}")
@@ -114,7 +208,13 @@ def main():
 
     try:
         db_conn = opendb(db_file_name)
+        # Read the systems file
         loadsystems(systems_file_name, drawing_name, db_conn)
+        # Read the drawio.file
+        drawing_content = read_drawio(drawing_file_name)
+        # Read obj data from db
+        db_obj_data = getobj(db_conn)
+
         # TODO: generate Draw.io  → drawing_file_name
         # TODO: generate firewall → if firewall_output
 
