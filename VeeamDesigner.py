@@ -3,6 +3,7 @@ Create Veeam Design Diagram & Firewall configurations (POC)
 """
 
 import argparse
+from collections import defaultdict
 import os
 import sqlite3
 import sys
@@ -169,8 +170,8 @@ def getobj(conn):
         SELECT
             s_main.name,
             s_main.ip,
-            s_main.role                      AS main_role,
-            GROUP_CONCAT(s_other.role, ', ') AS other_roles
+            s_main.role                     AS main_role,
+            GROUP_CONCAT(s_other.role, ',') AS other_roles
         FROM systems s_main
         LEFT JOIN systems s_other
             ON  s_other.name     = s_main.name
@@ -186,20 +187,62 @@ def getobj(conn):
     return data
 
 
-def output_code_begin(drawing_name):
+def getlinks(db_conn):
+    """
+    Returns a list of linkbs between objects.
+    """
+    cursor = db_conn.cursor()
+    cursor.execute("""
+        SELECT
+            s_from.name AS from_system,
+            s_to.name   AS to_system,
+            p.ports
+        FROM systems s_from
+        JOIN ports_definitions p ON s_from.role = p.from_role
+        JOIN systems s_to        ON s_to.role   = p.to_role
+        WHERE s_from.name != s_to.name
+    """)
+    rows = cursor.fetchall()
+
+    link_ports = defaultdict(set)
+    for from_system, to_system, ports in rows:
+        # split "445, 135" into individual ports before adding to set
+        for port in ports.split(","):
+            link_ports[(from_system, to_system)].add(port.strip())
+
+    def sort_ports(port_set):
+        singles = sorted(
+            [p for p in port_set if " to " not in p],
+            key=lambda p: int(p.replace(" ", "").split(",")[0]),
+        )
+        ranges = sorted(
+            [p for p in port_set if " to " in p],
+            key=lambda p: int(p.split(" to ")[0].strip()),
+        )
+        return ", ".join(singles + ranges)
+
+    return [
+        (from_system, to_system, sort_ports(port_set))
+        for (from_system, to_system), port_set in link_ports.items()
+    ]
+
+
+def output_code_begin():
     """
     Returns the header lines of the generated Python script.
     """
     lines = []
     lines.append("import os")
+    lines.append("")
     lines.append("from N2G import drawio_diagram")
-    lines.append(f"styles_dir = os.environ.get('STYLES', '.')")
+    lines.append("")
+    lines.append(f"styles_dir = os.environ.get('STYLES')")
+    lines.append("")
     lines.append("diagram = drawio_diagram()")
     lines.append('diagram.add_diagram("Page-1")')
-    lines.append("")
-    
+
     return lines
-    
+
 
 def output_code_nodes(db_obj_data, drawing_content):
     """
@@ -213,66 +256,112 @@ def output_code_nodes(db_obj_data, drawing_content):
 
         if name in drawing_content:
             _, x_pos, y_pos, width, height = drawing_content[name]
-            eprint.debug_eprint(f"[DRAWIO] {name} found in drawing at x={x_pos} y={y_pos}")
+            eprint.debug_eprint(
+                f"[DRAWIO] {name} found in drawing at x={x_pos} y={y_pos}"
+            )
         else:
-            x_pos  = str(auto_x)
-            y_pos  = str(auto_y)
-            width  = "60"
+            x_pos = str(auto_x)
+            y_pos = str(auto_y)
+            width = "60"
             height = "60"
             auto_x += 100
             auto_y += 100
-            eprint.debug_eprint(f"[DRAWIO] {name} not found, auto-positioned at x={x_pos} y={y_pos}")
+            eprint.debug_eprint(
+                f"[DRAWIO] {name} not found, auto-positioned at x={x_pos} y={y_pos}"
+            )
 
-        style_file = f"styles_dir + '/{main_role}.txt'"
+        style_file = f'styles_dir+"/{main_role}.txt"'
 
         lines.append(
-            f'diagram.add_node('
-            f'id="{name}", '
-            f'label="{name}", '
-            f'style={style_file}, '
-            f'x_pos="{x_pos}", '
-            f'y_pos="{y_pos}", '
-            f'width="{width}", '
-            f'height="{height}", '
-            f'data={{"ip": "{ip or ""}", "role": "{main_role}", "other_roles": "{other_roles or ""}"}})'
+            f"diagram.add_node("
+            f'id="{name}",'
+            f'label="{name}",'
+            f"style={style_file},"
+            f'x_pos="{x_pos}",'
+            f'y_pos="{y_pos}",'
+            f'width="{width}",'
+            f'height="{height}",'
+            f'data={{"ip": "{ip or ""}","role":"{main_role}","other_roles":"{other_roles or ""}"}})'
         )
         eprint.debug_eprint(f"[DRAWIO] node line added: {name} role={main_role}")
 
-    lines.append("")
-    
     return lines
-    
-    
+
+
+def output_links(link_data):
+    """
+    Returns the add_link lines of the generated Python script.
+    """
+    link_index = {(from_sys, to_sys): ports for from_sys, to_sys, ports in link_data}
+
+    lines = []
+    visited = set()
+
+    for from_sys, to_sys, ports in link_data:
+        if (from_sys, to_sys) in visited:
+            continue
+
+        reverse_ports = link_index.get((to_sys, from_sys), "")
+
+        kwargs = []
+        if reverse_ports:
+            kwargs.append(f'src_label="{reverse_ports}"')
+        if ports:
+            kwargs.append(f'trgt_label="{ports}"')
+
+        kwargs_str = ",".join(kwargs)
+        lines.append(f'diagram.add_link("{from_sys}","{to_sys}",{kwargs_str})')
+
+        visited.add((from_sys, to_sys))
+        visited.add((to_sys, from_sys))
+
+    return lines
+
+
 def output_code_end(drawing_file_name):
     """
     Returns the footer lines of the generated Python script.
     """
-    folder   = os.path.dirname(drawing_file_name) or "./"
+    folder = os.path.dirname(drawing_file_name) or "./"
     filename = os.path.basename(drawing_file_name)
     lines = []
     lines.append(f'diagram.dump_file(filename="{filename}", folder="{folder}")')
-    
+    lines.append("")
+
     return lines
-    
-    
-def write_script(drawing_name, drawing_file_name, db_obj_data, drawing_content):
+
+
+def write_script(
+    drawing_name, drawing_file_name, db_obj_data, drawing_content, links_data
+):
     """
     Assembles and writes the generated Python script to file.
     """
     script_file = drawing_name + ".py"
 
-    lines  = output_code_begin(drawing_name)
+    lines = output_code_begin()
     lines += output_code_nodes(db_obj_data, drawing_content)
+    lines += output_links(links_data)
     lines += output_code_end(drawing_file_name)
 
     with open(script_file, "w") as f:
         f.write("\n".join(lines))
 
     eprint.debug_eprint(f"[SCRIPT] written: {script_file}")
-    
+
     print(f"[OK] Script generated: {script_file}")
-    
-    
+
+
+def output_firewall(links_data):
+    """
+    One firewall rule per directed pair, ports already deduplicated and sorted.
+    """
+    lines = []
+    for from_sys, to_sys, ports in links_data:
+        lines.append(f'"{from_sys}", "{to_sys}", "{ports}"')
+    return lines
+
+
 def main():
     """Main function."""
     args = get_cli_arguments().parse_args()
@@ -301,10 +390,14 @@ def main():
         drawing_content = read_drawio(drawing_file_name)
         # Read obj data from db
         db_obj_data = getobj(db_conn)
-        # Swrite script to generate Draw.io
-        write_script(drawing_name, drawing_file_name, db_obj_data, drawing_content)
-        
-        # TODO: generate firewall → if firewall_output
+        # Read links data from db
+        links_data = getlinks(db_conn)
+        # Write script to generate Draw.io
+        write_script(
+            drawing_name, drawing_file_name, db_obj_data, drawing_content, links_data
+        )
+        # HERE: generate firewall → if firewall_output
+        print(output_firewall(links_data))
 
     except FileNotFoundError as err:
         eprint.eprint(f"[ERROR] {err}")
