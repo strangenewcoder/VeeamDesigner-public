@@ -1,5 +1,5 @@
 """
-Create Veeam Design Diagram & Firewall configurations (POC)
+Create Veeam Design Diagram & Firewall configurations (POC).
 """
 
 import argparse
@@ -29,9 +29,9 @@ def get_cli_arguments():
         "-w", "--drawing", required=True, help="drawing name to process"
     )
     parser.add_argument(
-        "-d",
+        "-o",
         "--drawio",
-        default=False,
+        default=True,
         action="store_true",
         help="enable Draw.io output",
     )
@@ -41,6 +41,13 @@ def get_cli_arguments():
         default=False,
         action="store_true",
         help="enable firewall rules output",
+    )
+    parser.add_argument(
+        "-d",
+        "--debug",
+        default=False,
+        action="store_true",
+        help="enable debug output",
     )
     return parser
 
@@ -154,13 +161,13 @@ def read_drawio(file_name):
         result[obj_id] = (obj_label, coord_x, coord_y, width, height)
 
         eprint.debug_eprint(
-            f"[DRAWIO] id={obj_id} label={obj_label} x={coord_x} y={coord_y} w={width} h={height}"
+            f"[DEBUG] id={obj_id} label={obj_label} x={coord_x} y={coord_y} w={width} h={height}"
         )
 
     return result
 
 
-def getobj(conn):
+def get_objs(conn):
     """
     Returns a list of systems with their main role and secondary roles.
     Each row: (name, ip, main_role, other_roles)
@@ -182,14 +189,14 @@ def getobj(conn):
     data = curs.fetchall()
     curs.close()
 
-    eprint.debug_epprint(data)
+    eprint.debug_eprint(f"[DEBUG] {data}")
 
     return data
 
 
-def getlinks(db_conn):
+def get_links(db_conn):
     """
-    Returns a list of linkbs between objects.
+    Returns a list of links between objects.
     """
     cursor = db_conn.cursor()
     cursor.execute("""
@@ -236,7 +243,7 @@ def output_code_begin():
     lines.append("")
     lines.append("from N2G import drawio_diagram")
     lines.append("")
-    lines.append(f"styles_dir = os.environ.get('STYLES')")
+    lines.append("styles_dir = os.environ.get('STYLES')")
     lines.append("")
     lines.append("diagram = drawio_diagram()")
     lines.append('diagram.add_diagram("Page-1")')
@@ -257,7 +264,7 @@ def output_code_nodes(db_obj_data, drawing_content):
         if name in drawing_content:
             _, x_pos, y_pos, width, height = drawing_content[name]
             eprint.debug_eprint(
-                f"[DRAWIO] {name} found in drawing at x={x_pos} y={y_pos}"
+                f"[DEBUG] {name} found in drawing at x={x_pos} y={y_pos}"
             )
         else:
             x_pos = str(auto_x)
@@ -267,7 +274,7 @@ def output_code_nodes(db_obj_data, drawing_content):
             auto_x += 100
             auto_y += 100
             eprint.debug_eprint(
-                f"[DRAWIO] {name} not found, auto-positioned at x={x_pos} y={y_pos}"
+                f"[INFO] {name} not found, auto-positioned at x={x_pos} y={y_pos}"
             )
 
         style_file = f'styles_dir+"/{main_role}.txt"'
@@ -283,12 +290,12 @@ def output_code_nodes(db_obj_data, drawing_content):
             f'height="{height}",'
             f'data={{"ip": "{ip or ""}","role":"{main_role}","other_roles":"{other_roles or ""}"}})'
         )
-        eprint.debug_eprint(f"[DRAWIO] node line added: {name} role={main_role}")
+        eprint.debug_eprint(f"[DEBUG] node line added: {name} role={main_role}")
 
     return lines
 
 
-def output_links(link_data):
+def output_code_links(link_data):
     """
     Returns the add_link lines of the generated Python script.
     """
@@ -341,15 +348,13 @@ def write_script(
 
     lines = output_code_begin()
     lines += output_code_nodes(db_obj_data, drawing_content)
-    lines += output_links(links_data)
+    lines += output_code_links(links_data)
     lines += output_code_end(drawing_file_name)
 
     with open(script_file, "w") as f:
         f.write("\n".join(lines))
 
-    eprint.debug_eprint(f"[SCRIPT] written: {script_file}")
-
-    print(f"[OK] Script generated: {script_file}")
+    eprint.eprint(f"[INFO] Script generated: {script_file}")
 
 
 def output_firewall(links_data):
@@ -371,7 +376,10 @@ def main():
     drawio_output = args.drawio
     firewall_output = args.firewall
 
-    eprint.set_debug(True)
+    eprint.set_debug(args.debug)
+
+    if firewall_output:
+        drawio_output = False
 
     eprint.eprint(f"[INFO] Project         : {project_name}")
     eprint.eprint(f"[INFO] Drawing         : {drawing_name}")
@@ -389,15 +397,21 @@ def main():
         # Read the drawio.file
         drawing_content = read_drawio(drawing_file_name)
         # Read obj data from db
-        db_obj_data = getobj(db_conn)
+        db_obj_data = get_objs(db_conn)
         # Read links data from db
-        links_data = getlinks(db_conn)
-        # Write script to generate Draw.io
-        write_script(
-            drawing_name, drawing_file_name, db_obj_data, drawing_content, links_data
-        )
-        # HERE: generate firewall → if firewall_output
-        print(output_firewall(links_data))
+        links_data = get_links(db_conn)
+        if drawio_output:
+            # Write script to generate Draw.io
+            write_script(
+                drawing_name,
+                drawing_file_name,
+                db_obj_data,
+                drawing_content,
+                links_data,
+            )
+        else:
+            # Generate firewall rule list
+            print(output_firewall(links_data))
 
     except FileNotFoundError as err:
         eprint.eprint(f"[ERROR] {err}")
