@@ -32,7 +32,7 @@ To recreate the database:
 
 4. Import the CSV into a new SQLite database (`scraped_db.db`), in a table named `all_ports`: This preserve the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
 
-## Initiatilizing the database
+## Initializing the database
 
 While studying the database, I realized that the structure was not very query-friendly.
 In particular, the `sourceservice` and `targetservice` columns were more descriptive than relational keys.
