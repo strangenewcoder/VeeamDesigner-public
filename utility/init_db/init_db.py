@@ -17,10 +17,10 @@ import sys
 
 from role_mappings import ROLE_MAPPINGS
 
-
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def get_cli_arguments():
     """Parse and return CLI arguments."""
@@ -28,9 +28,10 @@ def get_cli_arguments():
         description="Initialize VeeamDesigner tables and populate ports_definitions."
     )
     parser.add_argument(
-        "-p", "--project",
+        "-p",
+        "--project",
         required=True,
-        help="Project name. The database file <project>.db must already exist."
+        help="Project name. The database file <project>.db must already exist.",
     )
     return parser.parse_args()
 
@@ -38,6 +39,7 @@ def get_cli_arguments():
 # ---------------------------------------------------------------------------
 # DB helpers
 # ---------------------------------------------------------------------------
+
 
 def opendb(file_name):
     """Validate and connect to an existing SQLite database.
@@ -117,6 +119,7 @@ def create_tables(conn):
 # Port processing
 # ---------------------------------------------------------------------------
 
+
 def process_port(port):
     """Normalize a raw port string from all_ports into a clean ports value.
 
@@ -155,6 +158,7 @@ def process_port(port):
     def expand_plus(m):
         base = int(m.group(1))
         return f"{base} to {base + 1000}"
+
     value = re.sub(r"(\d+)\+", expand_plus, value)
 
     # Step 3b — normalize dash ranges: 2500-3300 → 2500 to 3300
@@ -173,6 +177,7 @@ def process_port(port):
             return f" {inner}"
         num = re.search(r"\d+", inner)
         return f" {num.group(0)}" if num else ""
+
     value = re.sub(r"\(([^)]*)\)", handle_parens, value)
 
     # Step 5 — normalize whitespace
@@ -212,6 +217,7 @@ def process_port(port):
 # ---------------------------------------------------------------------------
 # Role resolution
 # ---------------------------------------------------------------------------
+
 
 def resolve_role(service):
     """Resolve a service name to a role identifier using ROLE_MAPPINGS.
@@ -257,6 +263,7 @@ def resolve_role(service):
 # Data copy
 # ---------------------------------------------------------------------------
 
+
 def populate_ports_definitions(conn):
     """Read all_ports and insert processed rows into ports_definitions.
 
@@ -281,19 +288,29 @@ def populate_ports_definitions(conn):
 
     inserted = 0
     for product, sourceservice, targetservice, protocol, port, description in rows:
-        ports     = process_port(port)
+        ports = process_port(port)
         from_role = resolve_role(sourceservice)
-        to_role   = resolve_role(targetservice)
+        to_role = resolve_role(targetservice)
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO ports_definitions (
                 product, sourceservice, targetservice, protocol,
                 original_port, description, from_role, to_role, ports
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            product, sourceservice, targetservice, protocol,
-            port, description, from_role, to_role, ports
-        ))
+        """,
+            (
+                product,
+                sourceservice,
+                targetservice,
+                protocol,
+                port,
+                description,
+                from_role,
+                to_role,
+                ports,
+            ),
+        )
         inserted += 1
 
     conn.commit()
@@ -305,11 +322,12 @@ def populate_ports_definitions(conn):
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main():
     """
     Main function.
     """
-    
+
     args = get_cli_arguments()
 
     db_file = f"{args.project}.db"
