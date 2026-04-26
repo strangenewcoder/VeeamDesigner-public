@@ -115,7 +115,7 @@ python init_db.py -p scraped_db
 
 This will recreate the tables in `scraped_db.db` and populate `ports_definitions` from `all_ports`.
 
-## Ports Explorer
+### Ports Explorer
 
 To explore the ports definitions, i've created PortsExplorer.
 This is a Flask/HTMX projects, that you launch with
@@ -136,6 +136,46 @@ WARNING: This is a development server. Do not use it in a production deployment.
 Running an app, that read ports definition from the scraped_db.db database.
 
 Connecting using a browser to the URL displayed, you can click on source and target roles, to display the port relationship from and to the selected roles, and clicking on one relationship you can see the desctiption of the relationship.
+
+### Checking style files with `check_styles.py`
+
+As the number of roles grows — either because new entries are added to `role_mappings.py` or because the Veeam documentation is updated — it is easy to lose track of which roles have a style file and which do not. The `check_styles.py` utility automates this check.
+
+It reads all distinct roles from the `from_role` and `to_role` columns of `ports_definitions`, compares them against the `.txt` files present in the `STYLES` directory, and reports two categories of mismatch:
+
+- **Missing** — roles present in the database that have no corresponding style file. These will cause errors at diagram generation time.
+- **Extra** — style files that have no matching role in the database. These are harmless but may indicate outdated or unused files.
+
+Run it passing the project name:
+
+```
+python check_styles.py -p scraped_db
+```
+
+Example output when everything is in order:
+
+```
+[INFO] Connected to: scraped_db.db
+[INFO] Roles in DB       : 24
+[INFO] Style files found : 24
+
+[OK] All roles have a matching style file. No extra files found.
+```
+
+Example output when there are mismatches:
+
+```
+[INFO] Connected to: scraped_db.db
+[INFO] Roles in DB       : 24
+[INFO] Style files found : 22
+
+[MISSING] 2 role(s) have no style file:
+  - VBRCDPPROXY  →  expected: C:\styles\VBRCDPPROXY.txt
+  - VBRLOGSHIPPING  →  expected: C:\styles\VBRLOGSHIPPING.txt
+
+[EXTRA] 1 style file(s) have no matching role:
+  - OLDSTYLE.txt
+```
 
 ## Project file format
 
