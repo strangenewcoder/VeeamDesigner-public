@@ -107,7 +107,6 @@ UNION
 SELECT DISTINCT targetservice FROM ports_definitions WHERE to_role = '';
 ```
 
-
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the project name:
 
 ```
@@ -115,6 +114,28 @@ python init_db.py -p scraped_db
 ```
 
 This will recreate the tables in `scraped_db.db` and populate `ports_definitions` from `all_ports`.
+
+## Ports Explorer
+
+To explore the ports definitions, i've created PortsExplorer.
+This is a Flask/HTMX projects, that you launch with
+
+```
+python portsexplorer.py -p scraped_db
+```
+
+This create an instance of a webserver 
+
+```
+* Serving Flask app 'portsexplorer'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+```
+
+Running an app, that read ports definition from the scraped_db.db database.
+
+Connecting using a browser to the URL displayed, you can click on source and target roles, to display the port relationship from and to the selected roles, and clicking on one relationship you can see the desctiption of the relationship.
 
 ## Project file format
 

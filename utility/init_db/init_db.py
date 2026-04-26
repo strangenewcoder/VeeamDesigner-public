@@ -306,6 +306,10 @@ def populate_ports_definitions(conn):
 # ---------------------------------------------------------------------------
 
 def main():
+    """
+    Main function.
+    """
+    
     args = get_cli_arguments()
 
     db_file = f"{args.project}.db"

@@ -1,0 +1,18 @@
+{% if to_roles %}
+  {% for role in to_roles %}
+  <div class="list-row"
+       hx-get="/ports"
+       hx-vals='{"from_role": "{{ from_role }}", "to_role": "{{ role }}"}'
+       hx-target="#col3"
+       hx-swap="innerHTML"
+       onclick="selectRow(this, 'col2')"
+       hx-trigger="click">
+    {{ role }}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <div class="icon">∅</div>
+    No target roles found
+  </div>
+{% endif %}

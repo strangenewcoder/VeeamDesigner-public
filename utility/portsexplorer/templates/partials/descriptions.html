@@ -1,0 +1,39 @@
+{% if rows %}
+<table class="desc-table">
+  <thead>
+    <tr>
+      <th>Dir</th>
+      <th>Product</th>
+      <th>Source Service</th>
+      <th>Target Service</th>
+      <th>Proto</th>
+      <th>Port (orig)</th>
+      <th>Ports</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>
+        <span class="prefix-tag {{ direction }}">
+          {% if direction == 'direct' %}→{% else %}←{% endif %}
+        </span>
+      </td>
+      <td>{{ row.product or '—' }}</td>
+      <td>{{ row.sourceservice or '—' }}</td>
+      <td>{{ row.targetservice or '—' }}</td>
+      <td class="proto-cell">{{ row.protocol or '—' }}</td>
+      <td class="proto-cell">{{ row.original_port or '—' }}</td>
+      <td class="port-cell">{{ row.ports or '—' }}</td>
+      <td>{{ row.description or '—' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty-state">
+  <div class="icon">∅</div>
+  No matching rules found
+</div>
+{% endif %}
