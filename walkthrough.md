@@ -26,10 +26,95 @@ To recreate the database:
    ```
    python extract_ports.py PortsVBR.html VBR > VBR.csv
    ```
-
    This parses the HTML, adds the `VBR` product code, and saves the output to `VBR.csv`.
+   
+3. Merge all CSV in a single file named `all_ports.csv`, leaving the first row, that contain the fields name, only at the begining of the file.
 
-3. Import the CSV into a new SQLite database (`allports_veeamdesigner.db`), preserving the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
+4. Import the CSV into a new SQLite database (`scraped_db.db`), in a table named `all_ports`: This preserve the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
+
+## Initiatilizing the database
+
+While studying the database, I realized that the structure was not very query-friendly.
+In particular, the `sourceservice` and `targetservice` columns were more descriptive than relational keys.
+To improve this, I created a new table:
+
+```sql
+CREATE TABLE ports_definitions (
+    id            INTEGER PRIMARY KEY,
+    product       TEXT,
+    sourceservice TEXT,
+    targetservice TEXT,
+    protocol      TEXT,
+    original_port TEXT,
+    description   TEXT,
+    from_role     TEXT,
+    to_role       TEXT,
+    ports         TEXT
+);
+```
+
+This new table contains the original information, plus three additional columns:
+
+- `from_role` — normalized role code for the source service
+- `to_role` — normalized role code for the target service
+- `ports` — port information in a standardized format
+
+The idea was to introduce the concept of **system roles**, making the database more normalized and easier to query.
+
+### Port normalization
+
+The `original_port` field contains port information in various formats found in the Veeam documentation. The `ports` field is populated with a normalized version of this data, handling cases such as:
+
+- If no digits found — descriptive string, return as-is.
+- Replace 'or' with comma.
+- Replace N+ patterns with 'N to N+1000' ranges.
+- Normalize dash ranges: N-N → N to N.
+- Parentheses: discard if starts with 'for'; keep if purely digits;
+   extract first number if digits present; discard otherwise.
+- Normalize whitespace.
+- Normalize commas (ensure single space after comma).
+- Split by comma or space into tokens.
+- Merge tokens around 'to' into ranges; discard non-numeric tokens.
+- Join with ', ' and strip trailing comma/whitespace.
+
+### Role mappings
+
+The mappings from service names to role codes are defined in `role_mappings.py`:
+
+```python
+ROLE_MAPPINGS = {
+    "Backup server": "VBRBACKUPSERVER",
+    "%plug-in%": "VBRBACKUPSERVER",
+    "Veeam backup & replication console": "VBRCONSOLE",
+    "Backup repository": "VBRBACKUPREPOSITORY",
+    "Backup repository or gateway server": "VBRBACKUPREPOSITORY",
+    ...
+}
+```
+
+For example:
+
+- A service containing `"Backup server"` will be mapped to `"VBRBACKUPSERVER"`.
+- A service containing `"%plug-in%"` will also be mapped to `"VBRBACKUPSERVER"` (the `%` acts as a wildcard, matching any substring).
+
+The current mappings cover the most common Veeam components, but the database contains many more service descriptions that are not yet mapped. It is expected and encouraged to explore the unmapped entries and extend `role_mappings.py` accordingly — the more complete the mappings, the more accurate the generated diagrams and firewall rules will be.
+
+To find unmapped entries, you can run this query in DB Browser for SQLite:
+
+```sql
+SELECT DISTINCT sourceservice FROM ports_definitions WHERE from_role = ''
+UNION
+SELECT DISTINCT targetservice FROM ports_definitions WHERE to_role = '';
+```
+
+
+All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the project name:
+
+```
+python init_db.py -p scraped_db
+```
+
+This will recreate the tables in `scraped_db.db` and populate `ports_definitions` from `all_ports`.
 
 ## Project file format
 

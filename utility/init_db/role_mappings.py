@@ -1,8 +1,10 @@
 """
-veeamdesigner module for global config
+role_mappings.py — Mapping from service name patterns to role identifiers.
+
+All patterns are evaluated in order — last match wins.
 """
 
-mappings = {
+ROLE_MAPPINGS = {
     "Backup server": "VBRBACKUPSERVER",
     "%plug-in%": "VBRBACKUPSERVER",
     "Veeam backup & replication console": "VBRCONSOLE",
