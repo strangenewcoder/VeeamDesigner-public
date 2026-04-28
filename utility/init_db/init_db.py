@@ -3,9 +3,8 @@ init_db.py — Initialize VeeamDesigner tables in an existing SQLite database
             and populate ports_definitions from all_ports.
 
 Usage:
-    python init_db.py -p <project_name>
+    python init_db.py -f <db_filename>
 
-The database file is expected at <project_name>.db.
 Tables are dropped and recreated on every run.
 """
 
@@ -28,10 +27,10 @@ def get_cli_arguments():
         description="Initialize VeeamDesigner tables and populate ports_definitions."
     )
     parser.add_argument(
-        "-p",
-        "--project",
+        "-f",
+        "--dbfilename",
         required=True,
-        help="Project name. The database file <project>.db must already exist.",
+        help="Database file name.",
     )
     return parser.parse_args()
 
@@ -330,7 +329,7 @@ def main():
 
     args = get_cli_arguments()
 
-    db_file = f"{args.project}.db"
+    db_file = args.dbfilename
 
     try:
         conn = opendb(db_file)

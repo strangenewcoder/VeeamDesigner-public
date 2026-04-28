@@ -4,9 +4,8 @@ check_styles.py — Check that every role in ports_definitions has a
                   and report any extra files with no matching role.
 
 Usage:
-    python check_styles.py -p <project_name>
+    python check_styles.py -f <db_filename>
 
-The database file is expected at <project_name>.db.
 The STYLES environment variable must point to the styles directory.
 """
 
@@ -22,10 +21,10 @@ def get_cli_arguments():
         description="Check style files against roles defined in the database."
     )
     parser.add_argument(
-        "-p",
-        "--project",
+        "-f",
+        "--dbfilename",
         required=True,
-        help="Project name — database file is <project>.db",
+        help="Database file name.",
     )
     return parser.parse_args()
 
@@ -93,7 +92,7 @@ def main():
     """Main function."""
     args = get_cli_arguments()
 
-    db_file = f"{args.project}.db"
+    db_file = args.dbfilename
 
     styles_dir = os.environ.get("STYLES")
     if not styles_dir:

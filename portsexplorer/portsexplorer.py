@@ -162,16 +162,16 @@ def main():
 
     parser = argparse.ArgumentParser(description="Ports explorer web UI")
     parser.add_argument(
-        "-p",
-        "--project",
+        "-f",
+        "--dbfilename",
         required=True,
-        help="Project name — database file is <project>.db",
+        help="Database file name.",
     )
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=5000, type=int)
     args = parser.parse_args()
 
-    app.config["DB_PATH"] = f"{args.project}.db"
+    app.config["DB_PATH"] = args.dbfilename
     if not os.path.exists(app.config["DB_PATH"]):
         print(f"[ERROR] Database not found: {app.config["DB_PATH"]}")
         raise SystemExit(1)

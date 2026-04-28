@@ -15,7 +15,9 @@ However, I noticed some strange characters in the data, a common issue I've enco
 
 For this reason, I decided to rebuild the database from scratch (while keeping the same schema), allowing me to compare results and double-check data accuracy.
 
-## Scraping
+To do i've created 3 utilities, that you can find in the utility folder, each the rispective folder.
+
+### Scraping
 
 To recreate the database:
 
@@ -30,9 +32,9 @@ To recreate the database:
    
 3. Merge all CSV in a single file named `all_ports.csv`, leaving the first row, that contain the fields name, only at the begining of the file.
 
-4. Import the CSV into a new SQLite database (`scraped_db.db`), in a table named `all_ports`: This preserve the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
+4. Import the CSV into a new SQLite database, in a table named `all_ports`: This preserve the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
 
-## Initializing the database
+### Initializing the database
 
 While studying the database, I realized that the structure was not very query-friendly.
 In particular, the `sourceservice` and `targetservice` columns were more descriptive than relational keys.
@@ -61,7 +63,7 @@ This new table contains the original information, plus three additional columns:
 
 The idea was to introduce the concept of **system roles**, making the database more normalized and easier to query.
 
-### Port normalization
+#### Port normalization
 
 The `original_port` field contains port information in various formats found in the Veeam documentation. The `ports` field is populated with a normalized version of this data, handling cases such as:
 
@@ -77,7 +79,7 @@ The `original_port` field contains port information in various formats found in 
 - Merge tokens around 'to' into ranges; discard non-numeric tokens.
 - Join with ', ' and strip trailing comma/whitespace.
 
-### Role mappings
+#### Role mappings
 
 The mappings from service names to role codes are defined in `role_mappings.py`:
 
@@ -110,34 +112,12 @@ SELECT DISTINCT targetservice FROM ports_definitions WHERE to_role = '';
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the project name:
 
 ```
-python init_db.py -p scraped_db
+python init_db.py -f <dbfilename>
 ```
 
-This will recreate the tables in `scraped_db.db` and populate `ports_definitions` from `all_ports`.
+This will recreate the tables in `<dbfilename>` and populate `ports_definitions` from `all_ports`.
 
-### Ports Explorer
-
-To explore the ports definitions, i've created PortsExplorer.
-This is a Flask/HTMX projects, that you launch with
-
-```
-python portsexplorer.py -p scraped_db
-```
-
-This create an instance of a webserver 
-
-```
-* Serving Flask app 'portsexplorer'
- * Debug mode: on
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on http://127.0.0.1:5000
-```
-
-Running an app, that read ports definition from the scraped_db.db database.
-
-Connecting using a browser to the URL displayed, you can click on source and target roles, to display the port relationship from and to the selected roles, and clicking on one relationship you can see the desctiption of the relationship.
-
-### Checking style files with `check_styles.py`
+### Checking style files
 
 As the number of roles grows — either because new entries are added to `role_mappings.py` or because the Veeam documentation is updated — it is easy to lose track of which roles have a style file and which do not. The `check_styles.py` utility automates this check.
 
@@ -149,7 +129,7 @@ It reads all distinct roles from the `from_role` and `to_role` columns of `ports
 Run it passing the project name:
 
 ```
-python check_styles.py -p scraped_db
+python check_styles.py -f <dbfilename>
 ```
 
 Example output when everything is in order:
@@ -176,6 +156,28 @@ Example output when there are mismatches:
 [EXTRA] 1 style file(s) have no matching role:
   - OLDSTYLE.txt
 ```
+
+## Ports Explorer
+
+To explore the ports definitions, i've created PortsExplorer.
+This is a Flask/HTMX projects, that you launch with
+
+```
+python portsexplorer.py -f <dbfilename>
+```
+
+This create an instance of a webserver 
+
+```
+* Serving Flask app 'portsexplorer'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+```
+
+Running an app, that read ports definition from the <dbfilename> database.
+
+Connecting using a browser to the URL displayed, you can click on source and target roles, to display the port relationship from and to the selected roles, and clicking on one relationship you can see the desctiption of the relationship.
 
 ## Project file format
 
