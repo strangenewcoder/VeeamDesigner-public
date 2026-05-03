@@ -15,13 +15,15 @@ However, I noticed some strange characters in the data, a common issue I've enco
 
 For this reason, I decided to rebuild the database from scratch (while keeping the same schema), allowing me to compare results and double-check data accuracy.
 
+**veeamdesigner** works in two phases: a one-time database setup that extracts and normalizes Veeam port data from the official documentation, and a per-project phase that generates Draw.io diagrams and firewall rules from a list of systems you define.
+
 To do this, I created a couple of utility scripts.
 
 ## Environment creation
 
 Open a new command prompt, and go to the veeamdesigner root directory.
 
-Create a phython virtual environment (optional but useful).
+Create a Python virtual environment (optional but recommended).
 
 ```
 python -m venv venv
@@ -41,21 +43,23 @@ copy env_sample.cmd env.cmd
 copy utility\init_db\role_mappings_sample.py utility\init_db\role_mappings.py
 ```
 
-## Sample env.cmd
+### Sample env.cmd
 
-```batch env.cmd
+```batch
 set PROJECTDIR=f:\projects\veeamdesigner
 call %PROJECTDIR%\venv\scripts\activate.bat
-set PATH=%PATH%C:\Program Files\Python314\scripts;
+set PATH=%PATH%;C:\Program Files\Python314\scripts;
 set PYTHONPATH=%PROJECTDIR%\modules
 set STYLES=%PROJECTDIR%\styles
 ```
-	
-Before running any command in a new shell, run the environment setup script, from the root directory of veeamdesigner:
 
-`env.cmd` activates the virtual environment and sets the required environment variables:
+Before running any command in a new shell, run the environment setup script from the root directory of veeamdesigner:
 
+```
+call env.cmd
+```
 
+`env.cmd` activates the virtual environment and sets the required environment variables.
 
 ## Scraping
 
@@ -68,15 +72,15 @@ To recreate the database:
    ```
    python extract_ports.py -i PortsVBR.html -p VBR > VBR.csv
    ```
-   
+
    This parses the HTML, adds the `VBR` product code, and saves the output to `VBR.csv`.
-   
+
 3. Merge all CSV in a single file named `all_ports.csv`, keeping a header row only at the beginning of the file.
 
    To do this, I used a text editor — creating a dedicated merge tool seemed overkill.
 
-4. Import the CSV into a new SQLite database (`veeamdesigner.db`), in a table named `all_ports`: This preserves the same schema as the original MagicPorts database.
-   
+4. Import the CSV into a new SQLite database (`veeamdesigner.db`), in a table named `all_ports`. This preserves the same schema as the original MagicPorts database.
+
    To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
 
 ## Initializing the database
@@ -110,7 +114,7 @@ Now we have to populate these fields:
 
 ### Role mappings
 
-The concept is very simple: Every system in a Veeam infrastructure implements one or more roles, so the idea to "map" one or more sourceservice (or targetservice) to a from_role (or to_role).
+The concept is very simple: Every system in a Veeam infrastructure implements one or more roles, so the idea is to "map" one or more sourceservice (or targetservice) to a from_role (or to_role).
 
 The mappings from service names to role codes are defined in `role_mappings.py`:
 
@@ -155,10 +159,10 @@ The `original_port` field contains port information in various formats found in 
 - Merge tokens around 'to' into ranges; discard non-numeric tokens.
 - Join with ', ' and strip trailing comma/whitespace.
 
-All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the project name:
+All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the database filename:
 
 ```
-python init_db.py -f <DBFILENAME> 
+python init_db.py -f <DBFILENAME>
 ```
 
 This will recreate the tables needed in `<DBFILENAME>` and populate `ports_definitions` from `all_ports`.
@@ -189,27 +193,46 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 ### Overview
 
 ```
-[Veeam docs HTML]
-      │
-      ▼
-extract_ports.py ──► all_ports.csv ──► veeamdesigner.db (all_ports table)
-                                              │
-                                        init_db.py
-                                              │
-                                              ▼
-                                    ports_definitions table
-                                    (role relationships + ports)
-                                              │
-                          ┌───────────────────┘
-                          ▼
-                  <project>.db  ◄── veeamdesigner.db
-                          │
-                  <project>.vd  ──► loadsystems()
-                          │
-                          ▼
-                  VeeamDesigner.py
-                  ├── drawio output ──► <drawing>.py ──► <drawing>.drawio
-                  └── firewall output ──► firewall rules (stdout)
+── Database setup (once) ────────────────────────────────────────
+
+        [Veeam docs HTML]
+               │
+               ▼
+        extract_ports.py
+               │
+               ▼
+         all_ports.csv
+               │
+       DB Browser for SQLite
+               │
+               ▼
+       veeamdesigner.db
+       (all_ports table)
+               │
+               ▼
+          init_db.py
+        (updates same db)
+               │
+               ▼
+       veeamdesigner.db
+       (+ ports_definitions table)
+
+── Per project ──────────────────────────────────────────────────
+
+veeamdesigner.db ──► <project>.db
+                           │
+                     <project>.vd  (system definitions)
+                           │
+                           ▼
+                   veeamdesigner.py
+                           │
+                           ├── -o ──► <drawing>.py ──► <drawing>.drawio
+                           │                                │  ▲
+                           │                     (positions │  │ preserved)
+                           │                                ▼  │
+                           │                           Draw.io editor
+                           │
+                           └── -f ──► firewall rules (stdout)
 ```
 
 Now, having the db file with the port relationship between the system roles, is only the beginning.
@@ -254,7 +277,7 @@ site_a;VBRREPOWIN01;;VBRMOUNTSERVER;0
 
 `VBRREPOWIN01` has one primary role (`VBRPOWERNFS`) and three secondary roles (`VBRBACKUPREPOSITORYWINDOWS`, `VBRBACKUPREPOSITORY`, `VBRMOUNTSERVER`).
 
-All systems in this example belong to a drawing named `all`.
+All systems in this example belong to a drawing named `site_a`.
 
 ---
 
@@ -274,7 +297,7 @@ Each project lives in its own subdirectory under `projects/`. This keeps all pro
 
 Open a new command prompt, and go to the veeamdesigner root directory.
 
-Create the project folder (in the example is named **myproject**) and copy the reference database into it:
+Create the project folder (named **myproject** in this example) and copy the reference database into it:
 
 ```
 mkdir projects\myproject
@@ -313,8 +336,7 @@ veeamdesigner/                         ← PROJECTDIR
 
 ### Step 3 — Define style files
 
-Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`).
-In fact the only need for a primary role is to choose the style for a system.
+Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`). In fact the only need for a primary role is to choose the style for a system.
 
 A style file contains a single line: the Draw.io style string for that component type. Example:
 
@@ -322,11 +344,11 @@ A style file contains a single line: the Draw.io style string for that component
 outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.veeam.2d.server;fillColor=#2E73B8;gradientColor=none;
 ```
 
-The styles files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
+The style files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
 
-If a style file is missing for a role, the generated script will not assign a style for a system.
+If a style file is missing for a role, the generated script will not assign a style for that system.
 
-I've also created a utility to  verify that all roles have a matching style file:
+I've also created a utility to verify that all roles have a matching style file:
 
 ```
 check_styles.py -f <DBFILENAME>
@@ -336,15 +358,14 @@ check_styles.py -f <DBFILENAME>
 
 ### Step 4 — Generate a drawing script
 
-Run `VeeamDesigner.py` from inside the project folder, passing the project name and a drawing name:
+Run `veeamdesigner.py` from inside the project folder, passing the project name and a drawing name:
 
 ```
 cd projects\myproject
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a
+python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 ```
 
 This produces a Python script `site_a.py` in the current folder. The script, when executed, generates the Draw.io diagram `site_a.drawio`.
-
 
 What happens internally:
 
@@ -371,7 +392,7 @@ On the first run, nodes are placed automatically: the first node starts at `x=30
 
 Open `site_a.drawio` in Draw.io and move the nodes to where you want them. Save the file.
 
-The next time you run Step 4, `VeeamDesigner.py` will read the updated positions from `site_a.drawio` and use them in the regenerated script. Your layout is preserved across iterations.
+The next time you run Step 4, `veeamdesigner.py` will read the updated positions from `site_a.drawio` and use them in the regenerated script. Your layout is preserved across iterations.
 
 This means the typical iteration cycle is:
 
@@ -379,7 +400,7 @@ This means the typical iteration cycle is:
 edit myproject.vd
       │
       ▼
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a
+python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
       │
       ▼
 python site_a.py
@@ -408,11 +429,10 @@ Generate each drawing independently, from inside the project folder:
 
 ```
 cd projects\myproject
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_b
+python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
+python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_b
 ```
 
 Each drawing has its own `.py` script and its own `.drawio` file. Positions saved in `site_a.drawio` do not affect `site_b.drawio`.
 
 > **Note:** drawing names must not be substrings of each other. For example, do not use both `site` and `site_a` — `site` would also match `site_a` during filtering.
-
