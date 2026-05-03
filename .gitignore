@@ -215,3 +215,4 @@ projects/
 env.cmd
 role_mappings.py
 .~lock.*
+*.drawio.bkp

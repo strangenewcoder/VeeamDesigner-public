@@ -274,7 +274,7 @@ Each project lives in its own subdirectory under `projects/`. This keeps all pro
 
 Open a new command prompt, and go to the veeamdesigner root directory.
 
-Create the project folder (in the example is named ***myproject***) and copy the reference database into it:
+Create the project folder (in the example is named **myproject**) and copy the reference database into it:
 
 ```
 mkdir projects\myproject
@@ -345,6 +345,7 @@ python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a
 
 This produces a Python script `site_a.py` in the current folder. The script, when executed, generates the Draw.io diagram `site_a.drawio`.
 
+
 What happens internally:
 
 1. The systems matching the drawing name `site_a` are loaded from `myproject.vd` into the `systems` table.
@@ -357,7 +358,6 @@ What happens internally:
 ### Step 5 — Run the drawing script
 
 ```
-cd projects\myproject
 python site_a.py
 ```
 
