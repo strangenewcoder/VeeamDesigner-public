@@ -17,6 +17,40 @@ For this reason, I decided to rebuild the database from scratch (while keeping t
 
 To do this, I created a couple of utility scripts.
 
+## Environment creation
+
+Create a phython virtual environment (optional but useful).
+
+```
+python -m venv venv
+call venv\scripts\activate.bat
+```
+
+Install the required modules.
+
+```
+pip install beautifulsoup4 flask n2g
+```
+
+Copy and customize, if needed, the sample files before first use:
+
+```
+call env.cmd
+copy modules\role_mappings_sample.py modules\role_mappings.py
+```
+	
+Before running any command in a new shell, source the environment setup script from the root directory of the project:
+
+`env.cmd` activates the virtual environment and sets the required environment variables:
+
+```batch
+set PROJECTDIR=f:\projects\veeamdesigner
+call %PROJECTDIR%\venv\scripts\activate.bat
+set PATH=%PATH%C:\Program Files\Python314\scripts;
+set PYTHONPATH=%PROJECTDIR%\modules
+set STYLES=%PROJECTDIR%\styles
+```
+
 ## Scraping
 
 To recreate the database:
@@ -90,7 +124,12 @@ For example:
 - A service containing `"Backup server"` will be mapped to `"VBRBACKUPSERVER"`.
 - A service containing `"%plug-in%"` will also be mapped to `"VBRBACKUPSERVER"` (the `%` acts as a wildcard, matching any substring).
 
-The current mappings cover the most common Veeam components, but the database contains many more service descriptions that are not yet mapped. It is expected and encouraged to explore the unmapped entries and extend `role_mappings.py` accordingly — the more complete the mappings, the more accurate the generated diagrams and firewall rules will be.
+The current mappings cover some common Veeam components, but the database contains many more service descriptions that are not yet mapped. It is expected and encouraged to explore the unmapped entries and extend `role_mappings.py` accordingly — the more complete the mappings, the more accurate the generated diagrams and firewall rules will be.
+In fact, the `role_mappings.py` is not in the repo, so you must copy and customize, if needed, the sample files before first use
+
+```
+copy modules\role_mappings_sample.py modules\role_mappings.py
+```
 
 To find unmapped entries, you can run this query in DB Browser for SQLite:
 
@@ -232,28 +271,20 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
-Create the project folder and copy the reference database into it:
+Create the project folder (in the example is named myproject) and copy the reference database into it:
 
 ```
 mkdir projects\myproject
-copy veeamdesigner.db  projects\myproject\myproject.db
+copy utility\init_db\veeamdesigner.db  projects\myproject\myproject.db
 ```
 
 Then create the project file `projects\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
-
-An create a phython virtual environment (optional but useful)
-
-```
-python -m venv venv
-call venv\scripts\activate.bat
-pip install beautifulsoup4 flask n2g
-```
 
 The overall folder layout looks like this:
 
 ```
 veeamdesigner/                         ← PROJECTDIR
-├── VeeamDesigner.py
+├── veeamdesigner.py
 ├── env.cmd                            ← environment setup script
 ├── venv/                              ← Python virtual environment
 ├── modules/                           ← PYTHONPATH
@@ -262,7 +293,6 @@ veeamdesigner/                         ← PROJECTDIR
 │   ├── VBRBACKUPSERVER.txt
 │   ├── VBRBACKUPREPOSITORY.txt
 │   └── ...
-├── veeamdesigner.db                      ← reference database (do not edit)
 └── projects/
     ├── myproject/
     │   ├── myproject.db               ← copy of veeamdesigner.db
@@ -274,29 +304,6 @@ veeamdesigner/                         ← PROJECTDIR
         ├── anotherproject.db
         ├── anotherproject.vd
         └── ...
-```
-
-NB: Copy and customize if needed the sample files before first use:
-
-```
-copy env_sample.cmd env.cmd
-copy modules\role_mappings_sample.py modules\role_mappings.py
-```
-	
-Before running any command in a new shell, source the environment setup script from the root directory of the project:
-
-```
-call env.cmd
-```
-
-`env.cmd` activates the virtual environment and sets the required environment variables:
-
-```batch
-set PROJECTDIR=f:\projects\veeamdesigner
-call %PROJECTDIR%\venv\scripts\activate.bat
-set PATH=%PATH%C:\Program Files\Python314\scripts;
-set PYTHONPATH=%PROJECTDIR%\modules
-set STYLES=%PROJECTDIR%\styles
 ```
 
 ---
