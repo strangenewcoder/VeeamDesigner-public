@@ -276,13 +276,18 @@ veeamdesigner/                         ← PROJECTDIR
         └── ...
 ```
 
+NB: Copy and customize if needed the sample files before first use:
+
+```
+copy env_sample.cmd env.cmd
+copy modules\role_mappings_sample.py modules\role_mappings.py
+```
+	
 Before running any command in a new shell, source the environment setup script from the root directory of the project:
 
 ```
 call env.cmd
 ```
-
-NB: the env.cmd is distributed as `env_sample.cmd` so you can personalize it before running it
 
 `env.cmd` activates the virtual environment and sets the required environment variables:
 
