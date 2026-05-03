@@ -276,11 +276,13 @@ veeamdesigner/                         ← PROJECTDIR
         └── ...
 ```
 
-Before running any command in a new shell, source the environment setup script from the root:
+Before running any command in a new shell, source the environment setup script from the root directory of the project:
 
 ```
-call f:\projects\veeamdesigner\env.cmd
+call env.cmd
 ```
+
+NB: the env.cmd is distributed as `env_sample.cmd` so you can personalize it before running it
 
 `env.cmd` activates the virtual environment and sets the required environment variables:
 

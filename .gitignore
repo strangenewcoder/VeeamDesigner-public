@@ -212,3 +212,4 @@ venv/
 work/
 projects/
 env.cmd
+role_mappings.py
