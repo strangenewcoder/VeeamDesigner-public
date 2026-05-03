@@ -19,6 +19,8 @@ To do this, I created a couple of utility scripts.
 
 ## Environment creation
 
+Open a new command prompt, and go to the veeamdesigner root directory.
+
 Create a phython virtual environment (optional but useful).
 
 ```
@@ -49,7 +51,7 @@ set PYTHONPATH=%PROJECTDIR%\modules
 set STYLES=%PROJECTDIR%\styles
 ```
 	
-Before running any command in a new shell, run the environment setup script, from the root directory of the project:
+Before running any command in a new shell, run the environment setup script, from the root directory of veeamdesigner:
 
 `env.cmd` activates the virtual environment and sets the required environment variables:
 
@@ -270,6 +272,8 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
+Open a new command prompt, and go to the veeamdesigner root directory.
+
 Create the project folder (in the example is named ***myproject***) and copy the reference database into it:
 
 ```
@@ -318,11 +322,11 @@ A style file contains a single line: the Draw.io style string for that component
 outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.veeam.2d.server;fillColor=#2E73B8;gradientColor=none;
 ```
 
-The styles are distributed as bolierplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
+The styles files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
 
 If a style file is missing for a role, the generated script will not assign a style for a system.
 
-I've also created a utility to  verify that all roles have a matching style file
+I've also created a utility to  verify that all roles have a matching style file:
 
 ```
 check_styles.py -f <DBFILENAME>
