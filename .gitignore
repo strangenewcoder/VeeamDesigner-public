@@ -207,6 +207,7 @@ marimo/_lsp/
 __marimo__/
 
 # VeeamDesigner
+custom_styles/
 history/
 venv/
 work/

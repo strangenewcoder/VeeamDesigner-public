@@ -312,7 +312,7 @@ A style file contains a single line: the Draw.io style string for that component
 outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.veeam.2d.server;fillColor=#2E73B8;gradientColor=none;
 ```
 
-You can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
+The styles are distributed as bolierplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
 
 If a style file is missing for a role, the generated script will not assign a style for a system.
 
