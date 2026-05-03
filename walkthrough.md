@@ -35,21 +35,25 @@ pip install beautifulsoup4 flask n2g
 Copy and customize, if needed, the sample files before first use:
 
 ```
-call env.cmd
-copy modules\role_mappings_sample.py modules\role_mappings.py
+copy env_sample.cmd env.cmd
+copy utility\init_db\role_mappings_sample.py utility\init_db\role_mappings.py
 ```
-	
-Before running any command in a new shell, source the environment setup script from the root directory of the project:
 
-`env.cmd` activates the virtual environment and sets the required environment variables:
+## Sample env.cmd
 
-```batch
+```batch env.cmd
 set PROJECTDIR=f:\projects\veeamdesigner
 call %PROJECTDIR%\venv\scripts\activate.bat
 set PATH=%PATH%C:\Program Files\Python314\scripts;
 set PYTHONPATH=%PROJECTDIR%\modules
 set STYLES=%PROJECTDIR%\styles
 ```
+	
+Before running any command in a new shell, run the environment setup script, from the root directory of the project:
+
+`env.cmd` activates the virtual environment and sets the required environment variables:
+
+
 
 ## Scraping
 
@@ -125,11 +129,6 @@ For example:
 - A service containing `"%plug-in%"` will also be mapped to `"VBRBACKUPSERVER"` (the `%` acts as a wildcard, matching any substring).
 
 The current mappings cover some common Veeam components, but the database contains many more service descriptions that are not yet mapped. It is expected and encouraged to explore the unmapped entries and extend `role_mappings.py` accordingly — the more complete the mappings, the more accurate the generated diagrams and firewall rules will be.
-In fact, the `role_mappings.py` is not in the repo, so you must copy and customize, if needed, the sample files before first use
-
-```
-copy modules\role_mappings_sample.py modules\role_mappings.py
-```
 
 To find unmapped entries, you can run this query in DB Browser for SQLite:
 
@@ -271,7 +270,7 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
-Create the project folder (in the example is named myproject) and copy the reference database into it:
+Create the project folder (in the example is named ***myproject***) and copy the reference database into it:
 
 ```
 mkdir projects\myproject
