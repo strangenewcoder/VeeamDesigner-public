@@ -211,3 +211,4 @@ history/
 venv/
 work/
 projects/
+env.cmd
