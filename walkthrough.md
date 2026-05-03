@@ -170,7 +170,6 @@ extract_ports.py ──► all_ports.csv ──► veeamdesigner.db (all_ports t
                   VeeamDesigner.py
                   ├── drawio output ──► <drawing>.py ──► <drawing>.drawio
                   └── firewall output ──► firewall rules (stdout)
-				  
 ```
 
 Now, having the db file with the port relationship between the system roles, is only the beginning.
