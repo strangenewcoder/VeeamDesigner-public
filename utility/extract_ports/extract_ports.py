@@ -1,46 +1,56 @@
 """
-Parse HTML saved from Veeam Web Site.
-Getting the info about TCP/IP ports usage of Veeam Products.
-This works for VB385 tables.
+Parse HTML saved from Veeam Web Site, getting TCP/IP port usage.
 """
 
+import argparse
 import re
-import sys
+
 from bs4 import BeautifulSoup
+
+
+def get_cli_arguments():
+    """
+    Parse and return CLI arguments.
+    """
+
+    parser = argparse.ArgumentParser(
+        description="Parse HTML saved from Veeam Web Site, getting TCP/IP port usage."
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        required=True,
+        help="Input HTML file path.",
+    )
+    parser.add_argument(
+        "-p",
+        "--product",
+        required=True,
+        help="Product code (e.g. VBR).",
+    )
+
+    return parser.parse_args()
 
 
 def fix_mojibake(text):
     """
-    Fix some unintended character encoding.
+    Normalize special characters in extracted text.
     """
 
     replacements = {
-        "â€”": "-",  # em dash
-        "â€“": "-",  # en dash
-        "\u2014": "-",  # em dash (unicode) ← aggiunto
-        "\u2013": "-",  # en dash (unicode) ← aggiunto
-        "â€˜": "‘",  # left single quotation mark
-        "â€™": "’",  # right single quotation mark
-        "â€œ": "“",  # left double quotation mark
-        "â€": "”",  # right double quotation mark
-        "â€¦": "…",  # ellipsis
-        "â€¢": "•",  # bullet
-        "â€": "†",  # dagger (sometimes misinterpreted quote)
-        "â„¢": "™",  # trademark
-        "Â©": "©",  # copyright
-        "Â®": "®",  # registered
-        "Â": "",  # stray encoding artifact (often before currency/quotes)
+        "\u2014": "-",  # em dash (unicode)
         "\u00a0": " ",  # non-breaking space
     }
 
     for wrong, correct in replacements.items():
         text = text.replace(wrong, correct)
+
     return text
 
 
 def normalize_table_rows(rows):
     """
-    Fix some anomaly about tables extracted from HTML page.
+    Reconstruct incomplete rows by carrying forward values from previous rows.
     """
 
     normalized_rows = []
@@ -88,10 +98,10 @@ def normalize_table_rows(rows):
 
 def extract_port_tables(html_path):
     """
-    Parse HTML file to extract tables with the info desired.
+    Parse an HTML file and extract all tables as a list of rows.
     """
 
-    with open(html_path) as f:
+    with open(html_path, "r", encoding="utf-8") as f:
         soup = BeautifulSoup(f, "html.parser")
 
     results = []
@@ -114,12 +124,9 @@ def main():
     Main function.
     """
 
-    if len(sys.argv) != 3:
-        print("Usage: python extract_ports input.html productcode")
-        sys.exit(1)
-
-    input_html = sys.argv[1]
-    product_code = sys.argv[2]
+    args = get_cli_arguments()
+    input_html = args.input
+    product_code = args.product
 
     # Extract tables
     tables = extract_port_tables(input_html)
@@ -136,7 +143,7 @@ def main():
     # Print CSV-style output
     print("product;sourceService;targetService;protocol;port;description")
     for row in final_rows:
-        # Clean NBSP and and other encoded info from the last column (description)
+        # Clean encoded chars from the last column (description)
         cleaned_row = [fix_mojibake(col) for col in row]
 
         # Remove space before final dot (if any) in description

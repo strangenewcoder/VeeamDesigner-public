@@ -8,52 +8,62 @@ import os
 import sqlite3
 import sys
 import xml.etree.ElementTree as ET
+
 from bs4 import BeautifulSoup
 import eprint
 
 
 def get_cli_arguments():
     """
-    Parse the command line arguments.
+    Parse and return CLI arguments.
     """
+
     parser = argparse.ArgumentParser(
-        description="Generate Veeam network diagrams and firewall rules"
+        description="Create Veeam Design Diagram & Firewall configurations (POC)."
     )
     parser.add_argument(
         "-p",
         "--project",
         required=True,
-        help="project name (used as DB and .vd filename)",
+        help="Project name (used as DB and .vd filename).",
     )
     parser.add_argument(
-        "-w", "--drawing", required=True, help="drawing name to process"
+        "-w", "--drawing", required=True, help="Drawing name to process."
     )
     parser.add_argument(
         "-o",
         "--drawio",
         default=True,
         action="store_true",
-        help="enable Draw.io output",
+        help="Enable Draw.io output.",
     )
     parser.add_argument(
         "-f",
         "--firewall",
         default=False,
         action="store_true",
-        help="enable firewall rules output",
+        help="Enable firewall rules output.",
     )
     parser.add_argument(
         "-d",
         "--debug",
         default=False,
         action="store_true",
-        help="enable debug output",
+        help="Enable debug output.",
     )
-    return parser
+
+    return parser.parse_args()
 
 
 def opendb(file_name):
-    """connect to SQLite DB."""
+    """
+    Validate and connect to an existing SQLite database.
+
+    Raises:
+        FileNotFoundError: if the file does not exist.
+        RuntimeError: if the file is not a valid SQLite database.
+    """
+
     if not os.path.exists(file_name):
         raise FileNotFoundError(f"Database file not found: '{file_name}'")
 
@@ -64,17 +74,23 @@ def opendb(file_name):
         raise RuntimeError(f"File is not a valid SQLite database: '{file_name}'")
 
     db_conn = sqlite3.connect(file_name)
+
     eprint.eprint(f"[INFO] Connected to: {file_name}")
+
     return db_conn
 
 
-def loadsystems(file_name, drawing_name, conn):
-    """Load systems from .vd file into the systems table."""
-    cursor = conn.cursor()
+def loadsystems(file_name, drawing_name, db_conn):
+    """
+    Load systems from .vd file into the systems table,
+    then rebuild the mappings table from the loaded systems.
+    """
+
+    cursor = db_conn.cursor()
     cursor.execute("DELETE FROM systems;")
 
     rows_loaded = 0
-    with open(file_name, "r") as f:
+    with open(file_name, "r", encoding="utf-8") as f:
         for line_num, line in enumerate(f, start=1):
             line = line.strip()
             if not line or line.startswith("#"):
@@ -113,16 +129,16 @@ def loadsystems(file_name, drawing_name, conn):
         WHERE s_from.name != s_to.name
     """)
 
-    conn.commit()
+    db_conn.commit()
+
     eprint.eprint(f"[INFO] Loaded {rows_loaded} rows for drawing '{drawing_name}'.")
 
 
 def read_drawio(file_name):
     """
-    Read and parse a drawio file.
-    Returns a dictionary keyed by object id:
-    {id: (label, x, y, width, height, style)}
+    Returns a dictionary keyed by object id: {id: (label, x, y, width, height)}
     """
+
     result = {}
 
     if not os.path.exists(file_name):
@@ -167,13 +183,14 @@ def read_drawio(file_name):
     return result
 
 
-def get_objs(conn):
+def get_objs(db_conn):
     """
     Returns a list of systems with their main role and secondary roles.
     Each row: (name, ip, main_role, other_roles)
     """
-    curs = conn.cursor()
-    curs.execute("""
+
+    cursor = db_conn.cursor()
+    cursor.execute("""
         SELECT
             s_main.name,
             s_main.ip,
@@ -186,8 +203,8 @@ def get_objs(conn):
         WHERE s_main.mainrole = 1
         GROUP BY s_main.name, s_main.ip, s_main.role
     """)
-    data = curs.fetchall()
-    curs.close()
+    data = cursor.fetchall()
+    cursor.close()
 
     eprint.debug_eprint(f"[DEBUG] {data}")
 
@@ -196,8 +213,10 @@ def get_objs(conn):
 
 def get_links(db_conn):
     """
-    Returns a list of links between objects.
+    Returns a deduplicated, sorted list of directed links between systems.
+    Each row: (from_system, to_system, ports)
     """
+
     cursor = db_conn.cursor()
     cursor.execute("""
         SELECT
@@ -210,6 +229,7 @@ def get_links(db_conn):
         WHERE s_from.name != s_to.name
     """)
     rows = cursor.fetchall()
+    cursor.close()
 
     link_ports = defaultdict(set)
     for from_system, to_system, ports in rows:
@@ -236,8 +256,9 @@ def get_links(db_conn):
 
 def output_code_begin():
     """
-    Returns the header lines of the generated Python script.
+    Returns the header lines of the generated Python script as a list of strings.
     """
+
     lines = []
     lines.append("import os")
     lines.append("")
@@ -253,8 +274,9 @@ def output_code_begin():
 
 def output_code_nodes(db_obj_data, drawing_content):
     """
-    Returns the add_node lines of the generated Python script.
+    Returns the add_node lines of the generated Python script as a list of strings.
     """
+
     lines = []
     auto_x = 300
     auto_y = 300
@@ -274,7 +296,7 @@ def output_code_nodes(db_obj_data, drawing_content):
             auto_x += 100
             auto_y += 100
             eprint.debug_eprint(
-                f"[INFO] {name} not found, auto-positioned at x={x_pos} y={y_pos}"
+                f"[DEBUG] {name} not found, auto-positioned at x={x_pos} y={y_pos}"
             )
 
         style_file = f'styles_dir+"/{main_role}.txt"'
@@ -290,6 +312,7 @@ def output_code_nodes(db_obj_data, drawing_content):
             f'height="{height}",'
             f'data={{"ip": "{ip or ""}","role":"{main_role}","other_roles":"{other_roles or ""}"}})'
         )
+
         eprint.debug_eprint(f"[DEBUG] node line added: {name} role={main_role}")
 
     return lines
@@ -297,8 +320,9 @@ def output_code_nodes(db_obj_data, drawing_content):
 
 def output_code_links(link_data):
     """
-    Returns the add_link lines of the generated Python script.
+    Returns the add_link lines of the generated Python script as a list of strings.
     """
+
     link_index = {(from_sys, to_sys): ports for from_sys, to_sys, ports in link_data}
 
     lines = []
@@ -327,8 +351,9 @@ def output_code_links(link_data):
 
 def output_code_end(drawing_file_name):
     """
-    Returns the footer lines of the generated Python script.
+    Returns the footer lines of the generated Python script as a list of strings.
     """
+
     folder = os.path.dirname(drawing_file_name) or "./"
     filename = os.path.basename(drawing_file_name)
     lines = []
@@ -339,11 +364,12 @@ def output_code_end(drawing_file_name):
 
 
 def write_script(
-    drawing_name, drawing_file_name, db_obj_data, drawing_content, links_data
+    drawing_name, drawing_file_name, drawing_content, db_obj_data, links_data
 ):
     """
-    Assembles and writes the generated Python script to file.
+    Assemble and write the generated Python script to <drawing_name>.py.
     """
+
     script_file = drawing_name + ".py"
 
     lines = output_code_begin()
@@ -351,7 +377,7 @@ def write_script(
     lines += output_code_links(links_data)
     lines += output_code_end(drawing_file_name)
 
-    with open(script_file, "w") as f:
+    with open(script_file, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
     eprint.eprint(f"[INFO] Script generated: {script_file}")
@@ -361,6 +387,7 @@ def output_firewall(links_data):
     """
     One firewall rule per directed pair, ports already deduplicated and sorted.
     """
+
     lines = []
     for from_sys, to_sys, ports in links_data:
         lines.append(f'"{from_sys}", "{to_sys}", "{ports}"')
@@ -368,8 +395,11 @@ def output_firewall(links_data):
 
 
 def main():
-    """Main function."""
-    args = get_cli_arguments().parse_args()
+    """
+    Main function.
+    """
+
+    args = get_cli_arguments()
 
     project_name = args.project
     drawing_name = args.drawing
@@ -405,8 +435,8 @@ def main():
             write_script(
                 drawing_name,
                 drawing_file_name,
-                db_obj_data,
                 drawing_content,
+                db_obj_data,
                 links_data,
             )
         else:
@@ -419,8 +449,11 @@ def main():
     except RuntimeError as err:
         eprint.eprint(f"[ERROR] {err}")
         sys.exit(1)
-    except sqlite3.OperationalError as e:
-        eprint.eprint(f"[ERROR] Database error: {e}")
+    except sqlite3.OperationalError as err:
+        eprint.eprint(f"[ERROR] Database error: {err}")
+        sys.exit(1)
+    except Exception as err:  # pylint: disable=broad-except
+        eprint.eprint(f"[ERROR] Unexpected error: {err}")
         sys.exit(1)
 
 

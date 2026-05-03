@@ -1,6 +1,6 @@
 ## Introduction
 
-This project was inspired by the [MagicPorts website](https://magicports.veeambp.com/), which provides a visual representation of the TCP/IP ports used by Veeam products.
+This project was inspired by the [MagicPorts website](https://magicports.veeambp.com/), which provides a representation of the TCP/IP ports used by Veeam products.
 
 After seeing it, I thought it would be useful to have a tool that generates:
 
@@ -15,6 +15,8 @@ However, I noticed some strange characters in the data, a common issue I've enco
 
 For this reason, I decided to rebuild the database from scratch (while keeping the same schema), allowing me to compare results and double-check data accuracy.
 
+To do this, I created a couple of utility scripts.
+
 ## Scraping
 
 To recreate the database:
@@ -24,15 +26,20 @@ To recreate the database:
 2. Run the Python script `extract_ports.py` to parse the HTML and convert the data into CSV:
 
    ```
-   python extract_ports.py PortsVBR.html VBR > VBR.csv
+   python extract_ports.py -i PortsVBR.html -p VBR > VBR.csv
    ```
+   
    This parses the HTML, adds the `VBR` product code, and saves the output to `VBR.csv`.
    
-3. Merge all CSV in a single file named `all_ports.csv`, leaving the first row, that contain the fields name, only at the begining of the file.
+3. Merge all CSV in a single file named `all_ports.csv`, keeping a header row only at the beginning of the file.
 
-4. Import the CSV into a new SQLite database (`scraped_db.db`), in a table named `all_ports`: This preserve the same schema as the original MagicPorts database. To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
+   To do this, I used a text editor — creating a dedicated merge tool seemed overkill.
 
-## Initiatilizing the database
+4. Import the CSV into a new SQLite database (`veeamdesigner.db`), in a table named `all_ports`: This preserves the same schema as the original MagicPorts database.
+   
+   To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
+
+## Initializing the database
 
 While studying the database, I realized that the structure was not very query-friendly.
 In particular, the `sourceservice` and `targetservice` columns were more descriptive than relational keys.
@@ -59,25 +66,11 @@ This new table contains the original information, plus three additional columns:
 - `to_role` — normalized role code for the target service
 - `ports` — port information in a standardized format
 
-The idea was to introduce the concept of **system roles**, making the database more normalized and easier to query.
-
-### Port normalization
-
-The `original_port` field contains port information in various formats found in the Veeam documentation. The `ports` field is populated with a normalized version of this data, handling cases such as:
-
-- If no digits found — descriptive string, return as-is.
-- Replace 'or' with comma.
-- Replace N+ patterns with 'N to N+1000' ranges.
-- Normalize dash ranges: N-N → N to N.
-- Parentheses: discard if starts with 'for'; keep if purely digits;
-   extract first number if digits present; discard otherwise.
-- Normalize whitespace.
-- Normalize commas (ensure single space after comma).
-- Split by comma or space into tokens.
-- Merge tokens around 'to' into ranges; discard non-numeric tokens.
-- Join with ', ' and strip trailing comma/whitespace.
+Now we have to populate these fields:
 
 ### Role mappings
+
+The concept is very simple: Every system in a Veeam infrastructure implements one or more roles, so the idea to "map" one or more sourceservice (or targetservice) to a from_role (or to_role).
 
 The mappings from service names to role codes are defined in `role_mappings.py`:
 
@@ -107,54 +100,47 @@ UNION
 SELECT DISTINCT targetservice FROM ports_definitions WHERE to_role = '';
 ```
 
+### Port normalization
+
+The `original_port` field contains port information in various formats found in the Veeam documentation. The `ports` field is populated with a normalized version of this data, handling cases such as:
+
+- If no digits found — descriptive string, return as-is.
+- Replace 'or' with comma.
+- Replace N+ patterns with 'N to N+1000' ranges.
+- Normalize dash ranges: N-N → N to N.
+- Parentheses: discard if starts with 'for'; keep if purely digits; extract first number if digits present; discard otherwise.
+- Normalize whitespace.
+- Normalize commas: remove spaces before comma, ensure one space after.
+- Split by comma or space into tokens.
+- Merge tokens around 'to' into ranges; discard non-numeric tokens.
+- Join with ', ' and strip trailing comma/whitespace.
 
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the project name:
 
 ```
-python init_db.py -p scraped_db
+python init_db.py -f <DBFILENAME> 
 ```
 
-This will recreate the tables in `scraped_db.db` and populate `ports_definitions` from `all_ports`.
+This will recreate the tables needed in `<DBFILENAME>` and populate `ports_definitions` from `all_ports`.
 
-## Project file format
+## Ports Explorer
 
-A project file (`.vd`) is a plain text file that defines the systems involved in a design and their roles.
-
-### Example
+To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project. Launch it with:
 
 ```
-# drawings;name;ip;role;mainrole
-all;VBRBACKUPSERVER01;192.168.207.100;VBRBACKUPSERVER;1
-all;VBRBACKUPSERVER01;;VBRCONSOLE;0
-all;VBRREPOWIN01;192.168.204.100;VBRPOWERNFS;1
-all;VBRREPOWIN01;;VBRBACKUPREPOSITORYWINDOWS;0
-all;VBRREPOWIN01;;VBRBACKUPREPOSITORY;0
-all;VBRREPOWIN01;;VBRMOUNTSERVER;0
+python portsexplorer.py -f veeamdesigner.db
 ```
 
-### Field reference
+This starts a local web server:
 
-| **Field** | **Description** |
-| :-- | :-- |
-| `drawings` | Drawing name(s) the system belongs to. Multiple names separated by commas. |
-| `name` | System name. |
-| `ip` | IP address. Defined only for the primary role; ignored for secondary roles. |
-| `role` | Role the system plays. Relationships are resolved via the database. |
-| `mainrole` | `1` = primary role, `0` = secondary role. |
+```
+* Serving Flask app 'portsexplorer'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+```
 
-### Notes
-
-- Lines starting with `#` are comments and are ignored by the parser.
-- A system can appear multiple times, once per role.
-- Drawing names must be unique and must not be substrings of each other, as the parser uses simple text matching.
-
-### Example breakdown
-
-`VBRBACKUPSERVER01` has two roles: primary `VBRBACKUPSERVER` and secondary `VBRCONSOLE`.
-
-`VBRREPOWIN01` has one primary role (`VBRPOWERNFS`) and three secondary roles (`VBRBACKUPREPOSITORYWINDOWS`, `VBRBACKUPREPOSITORY`, `VBRMOUNTSERVER`).
-
-All systems in this example belong to a drawing named `all`.
+Connecting to the URL displayed in a browser, you can click on source and target roles to display the port relationships from and to the selected role. Clicking on a relationship shows the description of that connection.
 
 ## Workflow
 
@@ -166,7 +152,7 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 [Veeam docs HTML]
       │
       ▼
-extract_ports.py ──► all_ports.csv ──► scraped_db.db (all_ports table)
+extract_ports.py ──► all_ports.csv ──► veeamdesigner.db (all_ports table)
                                               │
                                         init_db.py
                                               │
@@ -176,7 +162,7 @@ extract_ports.py ──► all_ports.csv ──► scraped_db.db (all_ports tabl
                                               │
                           ┌───────────────────┘
                           ▼
-                  <project>.db  ◄── copy of scraped_db.db
+                  <project>.db  ◄── veeamdesigner.db
                           │
                   <project>.vd  ──► loadsystems()
                           │
@@ -186,13 +172,57 @@ extract_ports.py ──► all_ports.csv ──► scraped_db.db (all_ports tabl
                   └── firewall output ──► firewall rules (stdout)
 ```
 
+Now, having the db file with the port relationship between the system roles, is only the beginning.
+
+The first thing I need to define is the list of systems in the project involved in a design.
+
+### Project file format
+
+A project file (`.vd`) is a plain text file that defines the systems involved in a design and their roles.
+
+#### Example
+
+```
+# drawings;name;ip;role;mainrole
+all;VBRBACKUPSERVER01;192.168.207.100;VBRBACKUPSERVER;1
+all;VBRBACKUPSERVER01;;VBRCONSOLE;0
+all;VBRREPOWIN01;192.168.204.100;VBRPOWERNFS;1
+all;VBRREPOWIN01;;VBRBACKUPREPOSITORYWINDOWS;0
+all;VBRREPOWIN01;;VBRBACKUPREPOSITORY;0
+all;VBRREPOWIN01;;VBRMOUNTSERVER;0
+```
+
+#### Field reference
+
+| **Field** | **Description** |
+| :-- | :-- |
+| `drawings` | Drawing name(s) the system belongs to. Multiple names separated by commas. |
+| `name` | System name. |
+| `ip` | IP address. Defined only for the primary role; ignored for secondary roles. |
+| `role` | Role the system plays. Relationships are resolved via the database. |
+| `mainrole` | `1` = primary role, `0` = secondary role. |
+
+#### Notes
+
+- Lines starting with `#` are comments and are ignored by the parser.
+- A system can appear multiple times, once per role.
+- Drawing names must be unique and must not be substrings of each other, as the parser uses simple text matching.
+
+#### Example breakdown
+
+`VBRBACKUPSERVER01` has two roles: primary `VBRBACKUPSERVER` and secondary `VBRCONSOLE`.
+
+`VBRREPOWIN01` has one primary role (`VBRPOWERNFS`) and three secondary roles (`VBRBACKUPREPOSITORYWINDOWS`, `VBRBACKUPREPOSITORY`, `VBRMOUNTSERVER`).
+
+All systems in this example belong to a drawing named `all`.
+
 ---
 
 ### Step 1 — Prepare the reference database
 
-The reference database (`scraped_db.db`) contains the Veeam port and role relationship data and is built once, then reused across all projects.
+The reference database (`veeamdesigner.db`) contains the Veeam port and role relationship data and is built once, then reused across all projects.
 
-If you already have a valid `scraped_db.db`, skip ahead to Step 2.
+If you already have a valid `veeamdesigner.db`, skip ahead to Step 2.
 
 To rebuild it from scratch, follow the **Scraping** and **Initializing the database** sections above.
 
@@ -206,10 +236,18 @@ Create the project folder and copy the reference database into it:
 
 ```
 mkdir projects\myproject
-copy scraped_db.db  projects\myproject\myproject.db
+copy veeamdesigner.db  projects\myproject\myproject.db
 ```
 
 Then create the project file `projects\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
+
+An create a phython virtual environment (optional but useful)
+
+```
+python -m venv venv
+call venv\scripts\activate.bat
+pip install beautifulsoup4 flask n2g
+```
 
 The overall folder layout looks like this:
 
@@ -224,10 +262,10 @@ veeamdesigner/                         ← PROJECTDIR
 │   ├── VBRBACKUPSERVER.txt
 │   ├── VBRBACKUPREPOSITORY.txt
 │   └── ...
-├── scraped_db.db                      ← reference database (do not edit)
+├── veeamdesigner.db                      ← reference database (do not edit)
 └── projects/
     ├── myproject/
-    │   ├── myproject.db               ← copy of scraped_db.db
+    │   ├── myproject.db               ← copy of veeamdesigner.db
     │   ├── myproject.vd               ← system definitions
     │   ├── site_a.py                  ← generated drawing script
     │   ├── site_a.drawio              ← generated diagram (edit positions here)
@@ -259,6 +297,7 @@ set STYLES=%PROJECTDIR%\styles
 ### Step 3 — Define style files
 
 Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`).
+In fact the only need for a primary role is to choose the style for a system.
 
 A style file contains a single line: the Draw.io style string for that component type. Example:
 
@@ -268,7 +307,13 @@ outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=c
 
 You can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
 
-If a style file is missing for a role, the generated script will fail at runtime when N2G tries to read it.
+If a style file is missing for a role, the generated script will not assign a style for a system.
+
+I've also created a utility to  verify that all roles have a matching style file
+
+```
+check_styles.py -f <DBFILENAME>
+```
 
 ---
 
@@ -354,28 +399,3 @@ Each drawing has its own `.py` script and its own `.drawio` file. Positions save
 
 > **Note:** drawing names must not be substrings of each other. For example, do not use both `site` and `site_a` — `site` would also match `site_a` during filtering.
 
----
-
-### Step 8 — Generate firewall rules
-
-To output firewall rules instead of a diagram, use the `--firewall` flag:
-
-```
-cd projects\myproject
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a --firewall
-```
-
-This prints one rule per directed connection to stdout, in the format:
-
-```
-"VBRBACKUPSERVER01", "VBRREPOWIN01", "135, 445, 6160, 6161, 2500 to 3300"
-"VBRREPOWIN01", "VBRBACKUPSERVER01", "9401"
-```
-
-Redirect to a file as needed:
-
-```
-python %PROJECTDIR%\VeeamDesigner.py -p myproject -w site_a --firewall > site_a_fw.csv
-```
-
-When `--firewall` is specified, Draw.io script generation is skipped automatically.

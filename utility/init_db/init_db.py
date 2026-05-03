@@ -1,11 +1,5 @@
 """
-init_db.py — Initialize VeeamDesigner tables in an existing SQLite database
-            and populate ports_definitions from all_ports.
-
-Usage:
-    python init_db.py -f <db_filename>
-
-Tables are dropped and recreated on every run.
+Initialize VeeamDesigner tables and populate ports_definitions.
 """
 
 import argparse
@@ -14,15 +8,15 @@ import re
 import sqlite3
 import sys
 
+import eprint
 from role_mappings import ROLE_MAPPINGS
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
 
 
 def get_cli_arguments():
-    """Parse and return CLI arguments."""
+    """
+    Parse and return CLI arguments.
+    """
+
     parser = argparse.ArgumentParser(
         description="Initialize VeeamDesigner tables and populate ports_definitions."
     )
@@ -32,43 +26,40 @@ def get_cli_arguments():
         required=True,
         help="Database file name.",
     )
+
     return parser.parse_args()
 
 
-# ---------------------------------------------------------------------------
-# DB helpers
-# ---------------------------------------------------------------------------
-
-
 def opendb(file_name):
-    """Validate and connect to an existing SQLite database.
+    """
+    Validate and connect to an existing SQLite database.
 
     Raises:
         FileNotFoundError: if the file does not exist.
         RuntimeError: if the file is not a valid SQLite database.
     """
+
     if not os.path.exists(file_name):
         raise FileNotFoundError(f"Database file not found: '{file_name}'")
 
+    # quick check: SQLite files start with "SQLite format 3"
     with open(file_name, "rb") as f:
         header = f.read(16)
     if not header.startswith(b"SQLite format 3"):
         raise RuntimeError(f"File is not a valid SQLite database: '{file_name}'")
 
-    conn = sqlite3.connect(file_name)
-    print(f"[DB] Connected to: {file_name}")
-    return conn
+    db_conn = sqlite3.connect(file_name)
+    eprint.eprint(f"[INFO] Connected to: {file_name}")
+
+    return db_conn
 
 
-def create_tables(conn):
-    """Drop and recreate VeeamDesigner tables.
-
-    Tables:
-        - ports_definitions
-        - systems
-        - mappings
+def create_tables(db_conn):
     """
-    cursor = conn.cursor()
+    Drop and recreate VeeamDesigner working tables (ports_definitions, systems, mappings).
+    """
+
+    cursor = db_conn.cursor()
 
     cursor.execute("DROP TABLE IF EXISTS ports_definitions")
     cursor.execute("""
@@ -85,7 +76,7 @@ def create_tables(conn):
             ports          TEXT
         )
     """)
-    print("[DB] Table 'ports_definitions' recreated.")
+    eprint.eprint("[DB] Table 'ports_definitions' recreated.")
 
     cursor.execute("DROP TABLE IF EXISTS systems")
     cursor.execute("""
@@ -97,7 +88,7 @@ def create_tables(conn):
             mainrole   INT
         )
     """)
-    print("[DB] Table 'systems' recreated.")
+    eprint.eprint("[DB] Table 'systems' recreated.")
 
     cursor.execute("DROP TABLE IF EXISTS mappings")
     cursor.execute("""
@@ -108,19 +99,15 @@ def create_tables(conn):
             to_role    TEXT
         )
     """)
-    print("[DB] Table 'mappings' recreated.")
+    eprint.eprint("[DB] Table 'mappings' recreated.")
 
-    conn.commit()
+    db_conn.commit()
     cursor.close()
 
 
-# ---------------------------------------------------------------------------
-# Port processing
-# ---------------------------------------------------------------------------
-
-
 def process_port(port):
-    """Normalize a raw port string from all_ports into a clean ports value.
+    """
+    Normalize a raw port string from all_ports into a clean ports value.
 
     Processing steps:
         1. If no digits found — descriptive string, return as-is.
@@ -130,7 +117,7 @@ def process_port(port):
         4. Parentheses: discard if starts with 'for'; keep if purely digits;
            extract first number if digits present; discard otherwise.
         5. Normalize whitespace.
-        6. Normalize commas (ensure single space after comma).
+        6. Normalize commas: remove spaces before comma, ensure one space after.
         7. Split by comma or space into tokens.
         8. Merge tokens around 'to' into ranges; discard non-numeric tokens.
         9. Join with ', ' and strip trailing comma/whitespace.
@@ -141,6 +128,7 @@ def process_port(port):
     Returns:
         Normalized port string.
     """
+
     if port is None:
         return ""
 
@@ -185,7 +173,7 @@ def process_port(port):
     # Step 6 — normalize commas: remove spaces before comma, ensure one space after
     value = re.sub(r"\s*,\s*", ", ", value)
 
-    # Step 7 — split by comma or standalone space into tokens
+    # Step 7 — split by comma or space into tokens
     raw_tokens = re.split(r",\s*|\s+", value)
     raw_tokens = [t.strip() for t in raw_tokens if t.strip()]
 
@@ -207,24 +195,20 @@ def process_port(port):
         else:
             i += 1  # discard non-numeric token (e.g. "and", "other")
 
-    # Step 9 — join and clean up
+    # Step 9 — join with ', ' and strip trailing comma/whitespace
     result = ", ".join(tokens)
     result = result.strip(", ").strip()
+
     return result
 
 
-# ---------------------------------------------------------------------------
-# Role resolution
-# ---------------------------------------------------------------------------
-
-
 def resolve_role(service):
-    """Resolve a service name to a role identifier using ROLE_MAPPINGS.
+    """
+    Resolve a service name to a role identifier using ROLE_MAPPINGS.
 
     All patterns in ROLE_MAPPINGS are evaluated in order.
-    % in a pattern key is treated as .* (wildcard).
-    Matching is case-insensitive and full-string (anchored).
-    Last match wins — all matching patterns are applied in sequence.
+    % in a pattern key is treated as a wildcard (prefix, suffix, or both).
+    Matching is case-insensitive. Last match wins.
 
     Args:
         service: raw service name string (e.g. from sourceservice column).
@@ -232,6 +216,7 @@ def resolve_role(service):
     Returns:
         Role string (e.g. 'VBRBACKUPSERVER'), or '' if nothing matched.
     """
+
     if not service:
         return ""
 
@@ -258,13 +243,9 @@ def resolve_role(service):
     return role
 
 
-# ---------------------------------------------------------------------------
-# Data copy
-# ---------------------------------------------------------------------------
-
-
-def populate_ports_definitions(conn):
-    """Read all_ports and insert processed rows into ports_definitions.
+def populate_ports_definitions(db_conn):
+    """
+    Read all_ports and insert processed rows into ports_definitions.
 
     Columns copied:
         product, sourceservice, targetservice, protocol,
@@ -275,9 +256,10 @@ def populate_ports_definitions(conn):
         to_role   = resolve_role(targetservice)
 
     Raises:
-        sqlite3.OperationalError: if all_ports table is missing.
+        sqlite3.OperationalError: if the all_ports table is missing.
     """
-    cursor = conn.cursor()
+
+    cursor = db_conn.cursor()
 
     cursor.execute("""
         SELECT product, sourceservice, targetservice, protocol, port, description
@@ -312,9 +294,10 @@ def populate_ports_definitions(conn):
         )
         inserted += 1
 
-    conn.commit()
+    db_conn.commit()
     cursor.close()
-    print(f"[DB] Inserted {inserted} rows into 'ports_definitions'.")
+
+    eprint.eprint(f"[DB] Inserted {inserted} rows into 'ports_definitions'.")
 
 
 # ---------------------------------------------------------------------------
@@ -332,22 +315,24 @@ def main():
     db_file = args.dbfilename
 
     try:
-        conn = opendb(db_file)
-        create_tables(conn)
-        populate_ports_definitions(conn)
-        conn.close()
-        print("[OK] Database initialized successfully.")
-    except FileNotFoundError as e:
-        print(f"[ERROR] {e}")
+        db_conn = opendb(db_file)
+        create_tables(db_conn)
+        populate_ports_definitions(db_conn)
+        db_conn.close()
+
+        eprint.eprint("[OK] Database initialized successfully.")
+
+    except FileNotFoundError as err:
+        eprint.eprint(f"[ERROR] {err}")
         sys.exit(1)
-    except RuntimeError as e:
-        print(f"[ERROR] {e}")
+    except RuntimeError as err:
+        eprint.eprint(f"[ERROR] {err}")
         sys.exit(1)
-    except sqlite3.OperationalError as e:
-        print(f"[ERROR] Database error: {e}")
+    except sqlite3.OperationalError as err:
+        eprint.eprint(f"[ERROR] Database error: {err}")
         sys.exit(1)
-    except Exception as e:  # pylint: disable=broad-except
-        print(f"[ERROR] Unexpected error: {e}")
+    except Exception as err:  # pylint: disable=broad-except
+        eprint.eprint(f"[ERROR] Unexpected error: {err}")
         sys.exit(1)
 
 
