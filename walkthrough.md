@@ -83,7 +83,7 @@ To recreate the database:
 1. Navigate to the database initialization utility directory:
 
    ```
-   cd utility/init_db
+   cd utility/extract_ports
    ```
 
 2. Save the official Veeam ports documentation page in HTML format in this folder.
@@ -180,8 +180,20 @@ The `original_port` field contains port information in various formats found in 
 - Merge tokens around 'to' into ranges; discard non-numeric tokens.
 - Join with ', ' and strip trailing comma/whitespace.
 
-All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. Run it passing the database filename:
+All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. 
 
+First, go to the init_db directory
+
+```
+   cd ..\extract_ports
+```
+   
+Then run it passing the database filename:
+
+```
+   cd utility\extract_ports
+```
+   
 ```
 python init_db.py -f <DBFILENAME>
 ```
