@@ -12,6 +12,7 @@ Given the subject matter — designing Veeam backup infrastructure — the autho
 ## Documentation
 
 See [walkthrough.md](walkthrough.md) for the full guide.
+
 I tried really hard to document the project so that you can get the gist of the tool, and provide some samples so you can take a look without even running any tool.
 
 # Third-party components and acknowledgements
