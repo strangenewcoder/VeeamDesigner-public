@@ -83,7 +83,7 @@ To recreate the database:
 1. Navigate to the database initialization utility directory:
 
    ```
-   cd utility\extract_ports
+   cd %PROJECTDIR%\utility\extract_ports
    ```
 
 2. Save the official Veeam ports documentation page in HTML format in this folder.
@@ -185,7 +185,7 @@ All this processing, and the creation of required tables for the rest of the pro
 First, go to the `init_db` directory
 
 ```
-cd ..\extract_ports
+cd %PROJECTDIR%\utility\init_db
 ```
    
 Then run it, passing the database filename:
@@ -204,7 +204,7 @@ To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project.
 First, go to the `portsexplorer` directory
 
 ```
-cd ..\..\portsexplorer
+cd %PROJECTDIR%\portsexplorer
 ```
 
 Then launch it with:
@@ -320,7 +320,6 @@ site_a;VBRREPOWIN01;;VBRMOUNTSERVER;0
 All systems in this example belong to a drawing named `site_a`.
 
 ---
-### Project creation
 
 #### Step 1 — Prepare the reference database
 
@@ -393,7 +392,7 @@ If a style file is missing for a role, the generated script will not assign a st
 I've also created a utility to verify that all roles have a matching style file:
 
 ```
-cd ..\utility\check_styles
+cd %PROJECTDIR%\check_styles
 ```
 
 ```
@@ -407,7 +406,7 @@ check_styles.py -f <DBFILENAME>
 Run `veeamdesigner.py` from inside the project folder, passing the project name and a drawing name:
 
 ```
-cd projects\myproject
+cd %PROJECTDIR%projects\myproject
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 ```
 
@@ -474,7 +473,7 @@ site_b;VBRREPOLINUX01;192.168.205.100;VBRBACKUPREPOSITORYLINUX;1
 Generate each drawing independently, from inside the project folder:
 
 ```
-cd projects\myproject
+cd %PROJECTDIR%projects\myproject
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_b
 ```
