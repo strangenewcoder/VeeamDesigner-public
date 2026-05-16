@@ -1,5 +1,5 @@
 # VeeamDesigner
-Create Veeam Design Diagram &amp; Firewall configurations (POC).
+Create Veeam Design Diagram &amp; Firewall configurations (POC)
 
 ## Documentation
 
