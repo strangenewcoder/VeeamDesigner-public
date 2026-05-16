@@ -39,14 +39,14 @@ pip install beautifulsoup4 flask n2g
 Copy and customize, if needed, the sample files before first use:
 
 ```
-copy env_sample.cmd env.cmd
+copy env.sample env.cmd
 copy utility\init_db\role_mappings_sample.py utility\init_db\role_mappings.py
 ```
 
 ### Sample env.cmd
 
 ```batch
-set PROJECTDIR=f:\projects\veeamdesigner
+set PROJECTDIR=c:\projects\veeamdesigner
 call %PROJECTDIR%\venv\scripts\activate.bat
 set PATH=%PATH%;C:\Program Files\Python314\scripts;
 set PYTHONPATH=%PROJECTDIR%\modules
@@ -65,9 +65,15 @@ call env.cmd
 
 To recreate the database:
 
-1. Save the official Veeam ports documentation page in HTML format.
+1. Navigate to the database initialization utility directory:
 
-2. Run the Python script `extract_ports.py` to parse the HTML and convert the data into CSV:
+   ```
+   cd utility/init_db
+   ```
+
+2. Save the official Veeam ports documentation page in HTML format in this folder.
+
+3. Run the Python script `extract_ports.py` to parse the HTML and convert the data into CSV:
 
    ```
    python extract_ports.py -i PortsVBR.html -p VBR > VBR.csv
@@ -75,7 +81,7 @@ To recreate the database:
 
    This parses the HTML, adds the `VBR` product code, and saves the output to `VBR.csv`.
 
-3. Merge all CSV in a single file named `all_ports.csv`, keeping a header row only at the beginning of the file.
+4. Merge all CSV in a single file named `all_ports.csv`, keeping a header row only at the beginning of the file.
 
    To do this, I used a text editor — creating a dedicated merge tool seemed overkill.
 
