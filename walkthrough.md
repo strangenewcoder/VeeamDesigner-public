@@ -320,8 +320,9 @@ site_a;VBRREPOWIN01;;VBRMOUNTSERVER;0
 All systems in this example belong to a drawing named `site_a`.
 
 ---
+### Project creation
 
-### Step 1 — Prepare the reference database
+#### Step 1 — Prepare the reference database
 
 The reference database (`veeamdesigner.db`) contains the Veeam port and role relationship data and is built once, then reused across all projects.
 
@@ -331,7 +332,7 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 ---
 
-### Step 2 — Create a new project
+#### Step 2 — Create a new project
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
@@ -374,7 +375,7 @@ veeamdesigner/                         ← PROJECTDIR
 
 ---
 
-### Step 3 — Define style files
+#### Step 3 — Define style files
 
 Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`). In fact the only need for a primary role is to choose the style for a system.
 
@@ -401,7 +402,7 @@ check_styles.py -f <DBFILENAME>
 
 ---
 
-### Step 4 — Generate a drawing script
+#### Step 4 — Generate a drawing script
 
 Run `veeamdesigner.py` from inside the project folder, passing the project name and a drawing name:
 
@@ -421,7 +422,7 @@ What happens internally:
 
 ---
 
-### Step 5 — Run the drawing script
+#### Step 5 — Run the drawing script
 
 ```
 python site_a.py
@@ -433,7 +434,7 @@ On the first run, nodes are placed automatically: the first node starts at `x=30
 
 ---
 
-### Step 6 — Arrange the diagram in Draw.io
+#### Step 6 — Arrange the diagram in Draw.io
 
 Open `site_a.drawio` in Draw.io and move the nodes to where you want them. Save the file.
 
@@ -458,7 +459,7 @@ open / arrange in Draw.io  ──► save site_a.drawio
 
 ---
 
-### Step 7 — Multiple drawings per project
+#### Step 7 — Multiple drawings per project
 
 A project can have multiple drawings, each showing a different subset of systems or a different view of the infrastructure. The `drawings` field in the `.vd` file controls which systems appear in each drawing.
 
