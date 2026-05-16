@@ -14,7 +14,7 @@ From this, I set out to build a tool that can generate:
 - A **one-time setup phase** that builds and normalizes a local database of Veeam port information from the official documentation  
 - A **per-project generation phase** that produces Draw.io diagrams and firewall rule outputs from a user-defined infrastructure description  
 
-To support this, a set of utility scripts was created.
+To support this, a set of utility scripts was created an are provided under the `utility/` directory.
 
 ## Data source and initial exploration
 
@@ -33,9 +33,6 @@ The full pipeline is documented so it can be reproduced end-to-end if needed.
 
 In a few cases, some original inputs or intermediate files may not be fully redistributable due to external source or licensing constraints. Where this occurs, equivalent generation steps are provided instead.
 
-## Getting started
-
-To proceed with setup, utility scripts are provided under the `utility/` directory.
 
 ## Environment creation
 
