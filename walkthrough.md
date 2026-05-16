@@ -185,7 +185,7 @@ All this processing, and the creation of required tables for the rest of the pro
 First, go to the `init_db` directory
 
 ```
-   cd ..\extract_ports
+cd ..\extract_ports
 ```
    
 Then run it, passing the database filename:
@@ -204,7 +204,7 @@ To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project.
 First, go to the `portsexplorer` directory
 
 ```
-   cd ..\..\portsexplorer
+cd ..\..\portsexplorer
 ```
 
 Then launch it with:
@@ -241,6 +241,7 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
                ▼
          all_ports.csv
                │
+               ▼
        DB Browser for SQLite
                │
                ▼
@@ -259,6 +260,7 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 
 veeamdesigner.db ──► <project>.db
                            │
+                           ▼
                      <project>.vd  (system definitions)
                            │
                            ▼
@@ -383,10 +385,15 @@ outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=c
 ```
 
 The style files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
+If you want to create more appropriate styles, create a `cust_styles` folders and modify `env.cmd` to point to this folder.
 
 If a style file is missing for a role, the generated script will not assign a style for that system.
 
 I've also created a utility to verify that all roles have a matching style file:
+
+```
+cd ..\utility\check_styles
+```
 
 ```
 check_styles.py -f <DBFILENAME>
