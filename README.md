@@ -25,7 +25,7 @@ All trademarks and copyrights belong to their respective owners.
 ## Python libraries
 
 | Library | Purpose |
-| :-- | :-- | :-- |
+| :-- | :-- |
 | [BeautifulSoup4](https://www.crummy.com/software/BeautifulSoup/) | HTML parsing |
 | [N2G](https://github.com/dmulyalin/N2G) | Draw.io diagram generation |
 | [Flask](https://flask.palletsprojects.com/) | Web server for Ports Explorer |
@@ -35,7 +35,7 @@ All trademarks and copyrights belong to their respective owners.
 ## Frontend libraries and assets
 
 | Component | Purpose |
-| :-- | :-- | :-- |
+| :-- | :-- |
 | [HTMX](https://htmx.org) | Dynamic partial page updates in Ports Explorer |
 | [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono) | Monospace UI font |
 | [Syne](https://fonts.google.com/specimen/Syne) | Sans-serif UI font |
@@ -49,7 +49,7 @@ Fonts are loaded through Google Fonts CDN.
 These tools are not bundled with the project but are useful during development or usage.
 
 | Tool | Purpose |
-| :-- | :-- | :-- |
+| :-- | :-- |
 | [DB Browser for SQLite](https://sqlitebrowser.org) | Inspect and manage SQLite databases |
 | [Draw.io / diagrams.net](https://app.diagrams.net) | Open and arrange generated `.drawio` diagrams |
 
