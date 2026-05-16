@@ -182,7 +182,7 @@ The `original_port` field contains port information in various formats found in 
 
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. 
 
-First, go to the init_db directory
+First, go to the `init_db` directory
 
 ```
    cd ..\extract_ports
@@ -190,9 +190,6 @@ First, go to the init_db directory
    
 Then run it passing the database filename:
 
-```
-   cd utility\extract_ports
-```
    
 ```
 python init_db.py -f <DBFILENAME>
