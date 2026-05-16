@@ -2,22 +2,40 @@
 
 This project was inspired by the [MagicPorts website](https://magicports.veeambp.com/), which provides a representation of the TCP/IP ports used by Veeam products.
 
-After seeing it, I thought it would be useful to have a tool that generates:
+From this, I set out to build a tool that can generate:
 
-1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information.
-2. **Firewall Rule Lookalike** of a Veeam infrastructure, including TCP/IP port information.
+1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information  
+2. **Firewall rule representations** of a Veeam infrastructure, including TCP/IP port information  
 
-To get started, I explored the [Ports App Backend Project](https://github.com/shapedthought/ports_server) on GitHub.
+## How it works
 
-Inside, I found a SQLite database (`allports_updated.db`) that appears to contain the same information available on the official Veeam documentation website.
+**veeamdesigner** operates in two phases:
 
-However, I noticed some strange characters in the data, a common issue I've encountered before when scraping HTML sources.
+- A **one-time setup phase** that builds and normalizes a local database of Veeam port information from the official documentation  
+- A **per-project generation phase** that produces Draw.io diagrams and firewall rule outputs from a user-defined infrastructure description  
 
-For this reason, I decided to rebuild the database from scratch (while keeping the same schema), allowing me to compare results and double-check data accuracy.
+To support this, a set of utility scripts was created.
 
-**veeamdesigner** works in two phases: a one-time database setup that extracts and normalizes Veeam port data from the official documentation, and a per-project phase that generates Draw.io diagrams and firewall rules from a list of systems you define.
+## Data source and initial exploration
 
-To do this, I created a couple of utility scripts.
+I initially explored the [Ports App Backend Project](https://github.com/shapedthought/ports_server), which includes a SQLite database (`allports_updated.db`) that appears to mirror information from the official Veeam documentation.
+
+During analysis, I noticed some inconsistencies and encoding artifacts (e.g., strange characters), which are common when extracting structured data from HTML sources.
+
+To ensure consistency and correctness, I decided to rebuild the database from the original documentation while preserving the same schema.
+
+## Reproducibility
+
+Most of the artifacts required to run and explore this project are already included in the repository.  
+As a result, **rebuilding steps (database extraction, preprocessing, and intermediate generation) are optional** and provided mainly for transparency and reproducibility.
+
+The full pipeline is documented so it can be reproduced end-to-end if needed.
+
+In a few cases, some original inputs or intermediate files may not be fully redistributable due to external source or licensing constraints. Where this occurs, equivalent generation steps are provided instead.
+
+## Getting started
+
+To proceed with setup, utility scripts are provided under the `utility/` directory.
 
 ## Environment creation
 
