@@ -83,7 +83,7 @@ To recreate the database:
 1. Navigate to the database initialization utility directory:
 
    ```
-   cd utility/extract_ports
+   cd utility\extract_ports
    ```
 
 2. Save the official Veeam ports documentation page in HTML format in this folder.
@@ -188,7 +188,7 @@ First, go to the `init_db` directory
    cd ..\extract_ports
 ```
    
-Then run it passing the database filename:
+Then run it, passing the database filename:
 
    
 ```
@@ -199,7 +199,15 @@ This will recreate the tables needed in `<DBFILENAME>` and populate `ports_defin
 
 ## Ports Explorer
 
-To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project. Launch it with:
+To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project.
+
+First, go to the `portsexplorer` directory
+
+```
+   cd ..\..\portsexplorer
+```
+
+Then launch it with:
 
 ```
 python portsexplorer.py -f veeamdesigner.db
