@@ -1,9 +1,18 @@
 # VeeamDesigner
 Create Veeam Design Diagram &amp; Firewall configurations (POC)
 
+## Disclaimer
+
+This project is a personal learning exercise and is provided as-is, with no guarantees at all.
+
+Updates may change file formats, database schemas, or behavior without notice. Always keep a copy of your customizations and project files (`.vd`, `.db`, `.drawio`) before updating.
+
+Given the subject matter — designing Veeam backup infrastructure — the author is acutely aware of the irony of recommending backups, but...  please, **back up your data.**
+
 ## Documentation
 
 See [walkthrough.md](walkthrough.md) for the full guide.
+I tried really hard to document the project so that you can get the gist of the tool, and provide some samples so you can take a look without even running any tool.
 
 # Third-party components and acknowledgements
 

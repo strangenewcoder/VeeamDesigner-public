@@ -1,0 +1,35 @@
+<mxfile compressed="false" host="Electron">
+  <diagram id="Page-1" name="Page-1">
+    <mxGraphModel dx="1201" dy="828" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <object label="VBRBACKUPSERVER01" ip="192.168.207.100" role="VBRBACKUPSERVER" other_roles="VBRCONSOLE" id="VBRBACKUPSERVER01">
+          <mxCell parent="1" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#005F4B;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam2.vbr_server;" vertex="1">
+            <mxGeometry height="60" width="60" x="230" y="200" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="VBRREPOWIN01" ip="192.168.204.100" role="VBRPOWERNFS" other_roles="VBRBACKUPREPOSITORY,VBRBACKUPREPOSITORYWINDOWS,VBRMOUNTSERVER" id="VBRREPOWIN01">
+          <mxCell parent="1" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#005F4B;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;align=center;outlineConnect=0;shape=mxgraph.veeam2.veeam_proxy;" vertex="1">
+            <mxGeometry height="60" width="60" x="420" y="410" as="geometry" />
+          </mxCell>
+        </object>
+        <object label="" src_label="9401" trgt_label="135, 445, 6160, 6161, 6162, 6170, 2500 to 3300, 49152 to 65535" source="VBRBACKUPSERVER01" target="VBRREPOWIN01" id="18c03341ad901226c1f96e019adde29e">
+          <mxCell edge="1" parent="1" source="VBRBACKUPSERVER01" style="endArrow=none;" target="VBRREPOWIN01">
+            <mxGeometry relative="1" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="18c03341ad901226c1f96e019adde29e-src" connectable="0" parent="18c03341ad901226c1f96e019adde29e" style="labelBackgroundColor=#ffffff;;" value="9401" vertex="1">
+          <mxGeometry relative="1" x="-0.5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="18c03341ad901226c1f96e019adde29e-trgt" connectable="0" parent="18c03341ad901226c1f96e019adde29e" style="labelBackgroundColor=#ffffff;;" value="135, 445, 6160, 6161, 6162, 6170, 2500 to 3300, 49152 to 65535" vertex="1">
+          <mxGeometry relative="-1" x="0.5" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
