@@ -351,7 +351,34 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 ---
 
-#### Step 2 — Create a new project
+#### Step 2 — Define style files
+
+Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`). In fact the only need for a primary role is to choose the style for a system.
+
+A style file contains a single line: the Draw.io style string for that component type. Example:
+
+```
+outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.veeam.2d.server;fillColor=#2E73B8;gradientColor=none;
+```
+
+The style files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
+If you want to create more appropriate styles, create a `cust_styles` folders and modify `env.cmd` to point to this folder.
+
+If a style file is missing for a role, the generated script will not assign a style for that system.
+
+I've also created a utility to verify that all roles have a matching style file:
+
+```
+cd %PROJECTDIR%\check_styles
+```
+
+```
+check_styles.py -f <DBFILENAME>
+```
+
+---
+
+#### Step 3 — Create a new project
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
@@ -391,33 +418,6 @@ veeamdesigner/                         ← PROJECTDIR
         ├── anotherproject.db
         ├── anotherproject.vd
         └── ...
-```
-
----
-
-#### Step 3 — Define style files
-
-Each primary role needs a corresponding style file in the `styles/` folder. The filename must match the role identifier exactly (e.g. `VBRBACKUPSERVER.txt`). In fact the only need for a primary role is to choose the style for a system.
-
-A style file contains a single line: the Draw.io style string for that component type. Example:
-
-```
-outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.veeam.2d.server;fillColor=#2E73B8;gradientColor=none;
-```
-
-The style files distributed are boilerplate, but you can get a style string by placing a shape in Draw.io, right-clicking it, and selecting **Edit Style**.
-If you want to create more appropriate styles, create a `cust_styles` folders and modify `env.cmd` to point to this folder.
-
-If a style file is missing for a role, the generated script will not assign a style for that system.
-
-I've also created a utility to verify that all roles have a matching style file:
-
-```
-cd %PROJECTDIR%\check_styles
-```
-
-```
-check_styles.py -f <DBFILENAME>
 ```
 
 ---
