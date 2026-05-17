@@ -39,20 +39,20 @@ In a few cases, some original inputs or intermediate files may not be fully redi
 Get the repository from GitHub and save it in a new folder.
 Open a new command prompt and go to the **VeeamDesigner** root directory.
 
-Create a Python virtual environment (optional but recommended).
+Create a Python virtual environment (optional but recommended):
 
 ```
 python -m venv venv
 call venv\scripts\activate.bat
 ```
 
-Install the required modules.
+Install the required modules:
 
 ```
 pip install beautifulsoup4 flask n2g
 ```
 
-Copy and customize, if needed, the sample files before first use.
+Copy and customize, if needed, the sample files before first use:
 
 ```
 copy env.sample env.cmd
@@ -104,7 +104,7 @@ To recreate the database:
 
    To do this, I used a text editor — creating a dedicated merge tool seemed overkill.
 
-4. Import the CSV into a new SQLite database (`veeamdesigner.db`), in a table named `all_ports`. This preserves the same schema as the original MagicPorts database.
+5. Import the CSV into a new SQLite database (`veeamdesigner.db`), in a table named `all_ports`. This preserves the same schema as the original MagicPorts database.
 
    To work with SQLite databases, I use [DB Browser for SQLite](https://sqlitebrowser.org), which makes creating a table from a CSV very straightforward.
 
@@ -186,15 +186,14 @@ The `original_port` field contains port information in various formats found in 
 
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. 
 
-First, go to the database initialization directory.
+Navigate to the database initialization directory:
 
 ```
 cd %PROJECTDIR%\utility\init_db
 ```
-   
-Then run it, passing the database filename:
 
-   
+Run it, passing the database filename:
+
 ```
 python init_db.py -f veeamdesigner.db
 ```
@@ -207,7 +206,7 @@ This will recreate the tables needed in `veeamdesigner.db` and populate `ports_d
 
 To explore the ports definitions, I created PortsExplorer, a Flask/HTMX project.
 
-First, go to the `portsexplorer` directory
+Navigate to the `portsexplorer` directory:
 
 ```
 cd %PROJECTDIR%\portsexplorer
@@ -215,7 +214,7 @@ cd %PROJECTDIR%\portsexplorer
 
 NB: The `veeamdesigner.db` was provided copying the file from `init_db` directory.
 
-Then launch it with:
+Launch it with:
 
 ```
 python portsexplorer.py -f veeamdesigner.db
@@ -368,11 +367,10 @@ If a style file is missing for a role, the generated script will not assign a st
 
 I've also created a utility to verify that all roles have a matching style file:
 
-```
-cd %PROJECTDIR%\check_styles
-```
+Run the style checker, passing the database filename:
 
 ```
+cd %PROJECTDIR%\check_styles
 check_styles.py -f <DBFILENAME>
 ```
 
@@ -393,7 +391,7 @@ mkdir samples\myproject
 copy utility\init_db\veeamdesigner.db samples\myproject\myproject.db
 ```
 
-Then create the project file `samples\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
+Create the project file `samples\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
 
 The overall folder layout looks like this:
 
