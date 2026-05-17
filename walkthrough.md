@@ -239,7 +239,7 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 ### Overview
 
 ```
-─────────── Database setup (once) ───────────────────────────────────
+─────────── Database setup (once) ──────────────
 
 			  [Veeam docs HTML]
 					 │
@@ -263,8 +263,8 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 			  veeamdesigner.db
 	(+ ports_definitions, systems, mappings)
 
-─────────── Database setup (once) ───────────────────────────────────
-────────────── Per project ──────────────────────────────────────────
+```
+────────────── Project setup ───────────────────
 
 			  veeamdesigner.db
 			         │
