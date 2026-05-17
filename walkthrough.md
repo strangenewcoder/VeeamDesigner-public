@@ -4,8 +4,8 @@ This project was inspired by the [MagicPorts website](https://magicports.veeambp
 
 From this, I set out to build a tool that can generate:
 
-1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information.  
-2. **Firewall rule representations** of a Veeam infrastructure, including TCP/IP port information.  
+1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information.
+2. **Firewall rule representations** of a Veeam infrastructure, including TCP/IP port information.
 
 ## How it works
 
@@ -26,7 +26,7 @@ To ensure consistency and correctness, I decided to rebuild the database from th
 
 ## Reproducibility
 
-Most of the tools required to run and explore this project are already included in the repository.  
+Most of the tools required to run and explore this project are already included in the repository.
 As a result, **rebuilding steps (database extraction, preprocessing, and intermediate generation) are optional** and provided mainly for transparency and reproducibility.
 
 The full pipeline is documented so it can be reproduced end-to-end if needed.
@@ -83,9 +83,9 @@ To recreate the database:
 
 1. Navigate to the extract ports info utility directory:
 
-   ```
-   cd %PROJECTDIR%\utility\extract_ports
-   ```
+```
+cd %PROJECTDIR%\utility\extract_ports
+```
 
 2. Save the official Veeam ports documentation page in HTML format in this folder.
 
@@ -186,7 +186,7 @@ The `original_port` field contains port information in various formats found in 
 
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. 
 
-First, go to the database initialization directory
+First, go to the database initialization directory.
 
 ```
 cd %PROJECTDIR%\utility\init_db
@@ -196,7 +196,7 @@ Then run it, passing the database filename:
 
    
 ```
-python init_db.py -f <DBFILENAME>
+python init_db.py -f veeamdesigner.db
 ```
 
 NB: The `veeamdesigner.db` was provided copying the file from `extract_ports` directory.
