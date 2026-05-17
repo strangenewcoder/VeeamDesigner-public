@@ -52,7 +52,7 @@ Install the required modules.
 pip install beautifulsoup4 flask n2g
 ```
 
-Copy and customize, if needed, the sample files before first use:
+Copy and customize, if needed, the sample files before first use.
 
 ```
 copy env.sample env.cmd
@@ -69,7 +69,7 @@ set PYTHONPATH=%PROJECTDIR%\modules
 set STYLES=%PROJECTDIR%\styles
 ```
 
-Before running any command in a new shell, run the environment setup script from the root directory of veeamdesigner:
+Before running any command in a new shell, run the environment setup script from the root directory of **VeeamDesigner**.
 
 ```
 call env.cmd
@@ -81,7 +81,7 @@ call env.cmd
 
 To recreate the database:
 
-1. Navigate to the database initialization utility directory:
+1. Navigate to the extract ports info utility directory:
 
    ```
    cd %PROJECTDIR%\utility\extract_ports
@@ -92,10 +92,13 @@ To recreate the database:
 3. Run the Python script `extract_ports.py` to parse the HTML and convert the data into CSV:
 
    ```
+   python extract_ports.py -i PortsAVH7_7.html -p AVH > AVH.csv
+   python extract_ports.py -i PortsVB365_8.html -p VB365 > VB365.csv
+   python extract_ports.py -i PortsVBEM.html -p VBEM > VBEM.csv
    python extract_ports.py -i PortsVBR.html -p VBR > VBR.csv
    ```
 
-   This parses the HTML, adds the `VBR` product code, and saves the output to `VBR.csv`.
+   These parses the HTML, adds the product code, and saves the output to corresponding CSV files.
 
 4. Merge all CSV in a single file named `all_ports.csv`, keeping a header row only at the beginning of the file.
 
@@ -183,7 +186,7 @@ The `original_port` field contains port information in various formats found in 
 
 All this processing, and the creation of required tables for the rest of the project, are handled by `init_db.py`. 
 
-First, go to the `init_db` directory
+First, go to the database initialization directory
 
 ```
 cd %PROJECTDIR%\utility\init_db
@@ -195,6 +198,8 @@ Then run it, passing the database filename:
 ```
 python init_db.py -f <DBFILENAME>
 ```
+
+NB: The `veeamdesigner.db` was provided copying the file from `extract_ports` directory.
 
 This will recreate the tables needed in `<DBFILENAME>` and populate `ports_definitions` from `all_ports`.
 
