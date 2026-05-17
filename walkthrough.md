@@ -83,9 +83,9 @@ To recreate the database:
 
 1. Navigate to the extract ports info utility directory:
 
-```
-cd %PROJECTDIR%\utility\extract_ports
-```
+   ```
+   cd %PROJECTDIR%\utility\extract_ports
+   ```
 
 2. Save the official Veeam ports documentation page in HTML format in this folder.
 
@@ -201,7 +201,7 @@ python init_db.py -f veeamdesigner.db
 
 NB: The `veeamdesigner.db` was provided copying the file from `extract_ports` directory.
 
-This will recreate the tables needed in `<DBFILENAME>` and populate `ports_definitions` from `all_ports`.
+This will recreate the tables needed in `veeamdesigner.db` and populate `ports_definitions` from `all_ports`.
 
 ## Ports Explorer
 
@@ -212,6 +212,8 @@ First, go to the `portsexplorer` directory
 ```
 cd %PROJECTDIR%\portsexplorer
 ```
+
+NB: The `veeamdesigner.db` was provided copying the file from `init_db` directory.
 
 Then launch it with:
 
