@@ -4,15 +4,15 @@ This project was inspired by the [MagicPorts website](https://magicports.veeambp
 
 From this, I set out to build a tool that can generate:
 
-1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information  
-2. **Firewall rule representations** of a Veeam infrastructure, including TCP/IP port information  
+1. **Draw.io schematics** of a Veeam infrastructure, including TCP/IP port information.  
+2. **Firewall rule representations** of a Veeam infrastructure, including TCP/IP port information.  
 
 ## How it works
 
-**veeamdesigner** operates in two phases:
+**VeeamDesigner** operates in two phases:
 
-- A **one-time setup phase** that builds and normalizes a local database of Veeam port information from the official documentation  
-- A **per-project generation phase** that produces Draw.io diagrams and firewall rule outputs from a user-defined infrastructure description  
+- A **one-time setup phase** that builds and normalizes a local database of Veeam port information from the official documentation.  
+- A **per-project generation phase** that produces Draw.io diagrams and firewall rule outputs from a user-defined infrastructure description.  
 
 To support this, a set of utility scripts was created an are provided under the `utility/` directory.
 
