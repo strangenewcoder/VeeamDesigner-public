@@ -241,58 +241,58 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 ```
 ─────────── Database setup (once) ──────────────
 
-			  [Veeam docs HTML]
-					 │
-					 ▼
-			  extract_ports.py
-					 │
-					 ▼
-			   all_ports.csv
-					 │
-					 ▼
-			DB Browser for SQLite
-					 │
-					 ▼
-			  veeamdesigner.db
-					 │
-					 ▼
-				init_db.py
-	   (recreates tables in same db)
-					 │
-					 ▼
-			  veeamdesigner.db
-	(+ ports_definitions, systems, mappings)
+              [Veeam docs HTML]
+                     │
+                     ▼
+              extract_ports.py
+                     │
+                     ▼
+               all_ports.csv
+                     │
+                     ▼
+            DB Browser for SQLite
+                     │
+                     ▼
+              veeamdesigner.db
+                     │
+                     ▼
+                init_db.py
+       (recreates tables in same db)
+                     │
+                     ▼
+              veeamdesigner.db
+  (+ ports_definitions, systems, mappings)
 
 ```
 
 ```
 ────────────── Project setup ───────────────────
 
-			  veeamdesigner.db
-			         │
-			         │ (rename/copy)
-			  		 │
-			         ▼
-			    <project>.db ────────────────┐
-			                                 │
-		        <project>.vd ────────────────┤
-		    (system definitions)             │
-		                                     ▼
-		                              veeamdesigner.py
- 			                                 │  
-								┌────────────┴─────────────┐
-			                    │           (or)           │
-			                   -o                         -f
-			                    │                          │
-			                    ▼                          ▼
-			              <drawing>.py              firewall rules
-			                    │                      (stdout)
-			                    ▼
- 			            <drawing>.drawio
- 			                  │    ▲
- 			      (positions  │    │ preserved)
-			                  ▼    │
-			             Draw.io editor
+              veeamdesigner.db
+                     │
+                     │ (rename/copy)
+                     │
+                     ▼
+                <project>.db ────────────────┐
+                                             │
+                <project>.vd ────────────────┤
+            (system definitions)             │
+                                             ▼
+                                      veeamdesigner.py
+                                             │  
+                                ┌────────────┴────────────┐
+                                │           (or)          │
+                               -o                        -f
+                                │                         │
+                                ▼                         ▼
+                          <drawing>.py              firewall rules
+                                │                      (stdout)
+                                ▼
+                        <drawing>.drawio
+                              │    ▲
+                  (positions  │    │ preserved)
+                              ▼    │
+                         Draw.io editor
 ```
 
 Now, having the db file with the port relationship between the system roles, is only the beginning.
@@ -355,16 +355,18 @@ To rebuild it from scratch, follow the **Scraping** and **Initializing the datab
 
 Each project lives in its own subdirectory under `projects/`. This keeps all project files together and makes it easy to manage multiple independent projects side by side.
 
+> **Note:** A `sample/` directory is provided at the root of the repository. It contains a pre-built reference project (`.db`, `.vd`, and `.drawio` files) that you can use to explore and test VeeamDesigner without touching your own work. Do not use `sample/` as your working project folder — treat it as scratch.
+
 Open a new command prompt, and go to the veeamdesigner root directory.
 
 Create the project folder (named **myproject** in this example) and copy the reference database into it:
 
 ```
-mkdir projects\myproject
-copy utility\init_db\veeamdesigner.db  projects\myproject\myproject.db
+mkdir samples\myproject
+copy utility\init_db\veeamdesigner.db samples\myproject\myproject.db
 ```
 
-Then create the project file `projects\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
+Then create the project file `samples\myproject\myproject.vd`. This is a plain text file that lists all the systems involved in the project and their roles. See the **Project file format** section for the full specification.
 
 The overall folder layout looks like this:
 
@@ -379,13 +381,12 @@ veeamdesigner/                         ← PROJECTDIR
 │   ├── VBRBACKUPSERVER.txt
 │   ├── VBRBACKUPREPOSITORY.txt
 │   └── ...
-└── projects/
-    ├── myproject/
-    │   ├── myproject.db               ← copy of veeamdesigner.db
-    │   ├── myproject.vd               ← system definitions
-    │   ├── site_a.py                  ← generated drawing script
-    │   ├── site_a.drawio              ← generated diagram (edit positions here)
-    │   └── site_b.drawio
+├── sample/                            ← read-only reference project (provided)
+│   ├── sample.db
+│   ├── sample.vd
+│   ├── site_a.drawio
+│   └── ...
+└── projects/                          ← your working projects go here
     └── anotherproject/
         ├── anotherproject.db
         ├── anotherproject.vd
@@ -426,7 +427,7 @@ check_styles.py -f <DBFILENAME>
 Run `veeamdesigner.py` from inside the project folder, passing the project name and a drawing name:
 
 ```
-cd %PROJECTDIR%projects\myproject
+cd %PROJECTDIR%\samples\myproject
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 ```
 
@@ -493,7 +494,7 @@ site_b;VBRREPOLINUX01;192.168.205.100;VBRBACKUPREPOSITORYLINUX;1
 Generate each drawing independently, from inside the project folder:
 
 ```
-cd %PROJECTDIR%projects\myproject
+cd %PROJECTDIR%\samples\myproject
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_b
 ```
