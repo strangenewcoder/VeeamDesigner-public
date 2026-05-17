@@ -264,6 +264,8 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 	(+ ports_definitions, systems, mappings)
 
 ```
+
+```
 ────────────── Project setup ───────────────────
 
 			  veeamdesigner.db
