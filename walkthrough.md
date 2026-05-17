@@ -241,46 +241,55 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 ```
 ── Database setup (once) ────────────────────────────────────────
 
-        [Veeam docs HTML]
-               │
-               ▼
-        extract_ports.py
-               │
-               ▼
-         all_ports.csv
-               │
-               ▼
-       DB Browser for SQLite
-               │
-               ▼
-       veeamdesigner.db
-       (all_ports table)
-               │
-               ▼
-          init_db.py
-        (updates same db)
-               │
-               ▼
-       veeamdesigner.db
-       (+ ports_definitions table)
+			  [Veeam docs HTML]
+					 │
+					 ▼
+			  extract_ports.py
+					 │
+					 ▼
+			   all_ports.csv
+					 │
+					 ▼
+			DB Browser for SQLite
+					 │
+					 ▼
+			  veeamdesigner.db
+					 │
+					 ▼
+				init_db.py
+	   (recreates tables in same db)
+					 │
+					 ▼
+			  veeamdesigner.db
+	(+ ports_definitions, systems, mappings)
 
 ── Per project ──────────────────────────────────────────────────
 
-veeamdesigner.db ──► <project>.db
-                           │
-                           ▼
-                     <project>.vd  (system definitions)
-                           │
-                           ▼
-                   veeamdesigner.py
-                           │
-                           ├── -o ──► <drawing>.py ──► <drawing>.drawio
-                           │                                │  ▲
-                           │                     (positions │  │ preserved)
-                           │                                ▼  │
-                           │                           Draw.io editor
-                           │
-                           └── -f ──► firewall rules (stdout)
+			  veeamdesigner.db
+			         │
+			         │ (rename/copy)
+			  		 │
+			         ▼
+			    <project>.db ────────────────┐
+			                                 │
+		        <project>.vd ────────────────┤
+		    (system definitions)             │
+		                                     ▼
+		                              veeamdesigner.py
+ 			                                 │  
+								┌────────────┴─────────────┐
+			                    │           (or)           │
+			                   -o                         -f
+			                    │                          │
+			                    ▼                          ▼
+			              <drawing>.py              firewall rules
+			                    │                      (stdout)
+			                    ▼
+ 			            <drawing>.drawio
+ 			                  │    ▲
+ 			      (positions  │    │ preserved)
+			                  ▼    │
+			             Draw.io editor
 ```
 
 Now, having the db file with the port relationship between the system roles, is only the beginning.
