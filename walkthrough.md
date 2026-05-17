@@ -14,7 +14,7 @@ From this, I set out to build a tool that can generate:
 - A **one-time setup phase** that builds and normalizes a local database of Veeam port information from the official documentation.  
 - A **per-project generation phase** that produces Draw.io diagrams and firewall rule outputs from a user-defined infrastructure description.  
 
-To support this, a set of utility scripts was created an are provided under the `utility/` directory.
+To support this, a set of utility scripts was created and is provided under the `utility/` directory.
 
 ## Data source and initial exploration
 
@@ -26,7 +26,7 @@ To ensure consistency and correctness, I decided to rebuild the database from th
 
 ## Reproducibility
 
-Most of the artifacts required to run and explore this project are already included in the repository.  
+Most of the tools required to run and explore this project are already included in the repository.  
 As a result, **rebuilding steps (database extraction, preprocessing, and intermediate generation) are optional** and provided mainly for transparency and reproducibility.
 
 The full pipeline is documented so it can be reproduced end-to-end if needed.
@@ -36,7 +36,8 @@ In a few cases, some original inputs or intermediate files may not be fully redi
 
 ## Environment creation
 
-Open a new command prompt, and go to the veeamdesigner root directory.
+Get the repository from GitHub and save it in a new folder.
+Open a new command prompt and go to the **VeeamDesigner** root directory.
 
 Create a Python virtual environment (optional but recommended).
 
