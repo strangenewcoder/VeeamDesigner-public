@@ -131,9 +131,9 @@ CREATE TABLE ports_definitions (
 
 This new table contains the original information, plus three additional columns:
 
-- `from_role` — normalized role code for the source service
-- `to_role` — normalized role code for the target service
-- `ports` — port information in a standardized format
+- `from_role` — normalized role code for the source service.
+- `to_role` — normalized role code for the target service.
+- `ports` — port information in a standardized format.
 
 Now we have to populate these fields:
 
