@@ -238,7 +238,7 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
 ### Overview
 
 ```
-─────────── Database setup (once) ──────────────
+─────────── Prepare the reference database (once) ──────────────
 
               [Veeam docs HTML]
                      │
@@ -261,6 +261,14 @@ This section describes the end-to-end workflow for using VeeamDesigner, from set
                      ▼
               veeamdesigner.db
   (+ ports_definitions, systems, mappings)
+
+```
+
+```
+─────────── Define style files (once) ──────────────
+
+              create style files 
+
 
 ```
 
@@ -484,9 +492,16 @@ A project can have multiple drawings, each showing a different subset of systems
 Example: a system that belongs to both `site_a` and `site_b`:
 
 ```
+#always start with a comment line
+#if line begin with # is a comment
+#drawings;name;ip;role;mainrole
 site_a,site_b;VBRBACKUPSERVER01;192.168.207.100;VBRBACKUPSERVER;1
+site_a;VBRBACKUPSERVER01;;VBRCONSOLE;0
 site_a;VBRREPOWIN01;192.168.204.100;VBRPOWERNFS;1
-site_b;VBRREPOLINUX01;192.168.205.100;VBRBACKUPREPOSITORYLINUX;1
+site_a;VBRREPOWIN01;;VBRBACKUPREPOSITORYWINDOWS;0
+site_a;VBRREPOWIN01;;VBRBACKUPREPOSITORY;0
+site_a;VBRREPOWIN01;;VBRMOUNTSERVER;0
+site_b;VBRREPOLINUX01;192.168.207.101;VBRBACKUPREPOSITORYLINUX;1
 ```
 
 Generate each drawing independently, from inside the project folder:
@@ -495,8 +510,15 @@ Generate each drawing independently, from inside the project folder:
 cd %PROJECTDIR%\samples\myproject
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_a
 python %PROJECTDIR%\veeamdesigner.py -p myproject -w site_b
+
+python site_a.py
+python site_b.py
 ```
 
 Each drawing has its own `.py` script and its own `.drawio` file. Positions saved in `site_a.drawio` do not affect `site_b.drawio`.
 
 > **Note:** drawing names must not be substrings of each other. For example, do not use both `site` and `site_a` — `site` would also match `site_a` during filtering.
+
+#### Step 8 - Look at drawings
+
+A not obvious thing, that you can see only looking at a system positioning over it, is that a tooltip appear, with the IP Address and the roles of the system.
