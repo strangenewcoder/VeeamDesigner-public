@@ -521,4 +521,4 @@ Each drawing has its own `.py` script and its own `.drawio` file. Positions save
 
 #### Step 8 - Look at drawings
 
-A not obvious thing, that you can see only looking at a system positioning over it, is that a tooltip appear, with the IP Address and the roles of the system.
+A not obvious thing, that you can see only looking at a system positioning over it, is that a tooltip appear, with the IP Address and the roles of the system..
