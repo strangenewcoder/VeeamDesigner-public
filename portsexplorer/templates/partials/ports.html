@@ -1,0 +1,23 @@
+{% if port_entries %}
+  {% for entry in port_entries %}
+  <div class="list-row"
+       hx-get="/descriptions"
+       hx-vals='{"from_role": "{{ from_role }}", "to_role": "{{ to_role }}", "ports": "{{ entry.ports }}", "direction": "{{ entry.direction }}"}'
+       hx-target="#col4"
+       hx-swap="innerHTML"
+       onclick="selectPortRow(this)"
+       hx-trigger="click">
+    <span class="prefix-tag {{ entry.direction }}">
+      {% if entry.direction == 'direct' %}→{% else %}←{% endif %}
+    </span>
+    {{ entry.ports }}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="empty-state">
+    <div class="icon">∅</div>
+    No ports found
+  </div>
+{% endif %}
+
+
