@@ -37,6 +37,8 @@ In a few cases, some original inputs or intermediate files may not be fully redi
 ## Environment creation
 
 Get the repository from GitHub and save it in a new folder.
+If you are unfamiliar with github (like me, trust me), when you are in the repository, go to **tabs**, where you can find the zip for the release you want, and download it.
+Then enxpand the content in a **VeeamDesigner** directory, that will be the root of the project.
 Open a new command prompt and go to the **VeeamDesigner** root directory.
 
 Create a Python virtual environment (optional but recommended):
