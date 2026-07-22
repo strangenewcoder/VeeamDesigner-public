@@ -389,9 +389,11 @@ I've also created a utility to verify that all roles have a matching style file:
 
 Run the style checker, passing the database filename:
 
+NB: The `veeamdesigner.db` was created copying the file from `init_db` directory.
+
 ```
-cd %PROJECTDIR%\check_styles
-check_styles.py -f <DBFILENAME>
+cd %PROJECTDIR%\utility\check_styles
+check_styles.py -f veeamdesigner.db
 ```
 
 ---
@@ -403,6 +405,10 @@ Each project lives in its own subdirectory under `projects/`. This keeps all pro
 > **Note:** A `sample/` directory is provided at the root of the repository. It contains a pre-built reference project (`.db`, `.vd`, and `.drawio` files) that you can use to explore and test VeeamDesigner without touching your own work. Do not use `sample/` as your working project folder — treat it as scratch.
 
 Open a new command prompt, and go to the veeamdesigner root directory.
+
+```
+cd %PROJECTDIR%
+```
 
 Create the project folder (named **myproject** in this example) and copy the reference database into it:
 
@@ -454,7 +460,7 @@ This produces a Python script `site_a.py` in the current folder. The script, whe
 What happens internally:
 
 1. The systems matching the drawing name `site_a` are loaded from `myproject.vd` into the `systems` table.
-2. If `site_a.drawio` already exists, node positions are read from it.
+2. If `site_a.drawio` already exists, systems positions are read from it.
 3. For each system, an `add_node` call is written to the script, using the existing position if available, or an auto-calculated position if not.
 4. For each role relationship found in `ports_definitions`, an `add_link` call is written with the relevant ports as labels.
 
@@ -474,7 +480,12 @@ On the first run, nodes are placed automatically: the first node starts at `x=30
 
 #### Step 6 — Arrange the diagram in Draw.io
 
-Open `site_a.drawio` in Draw.io and move the nodes to where you want them. Save the file.
+Open `site_a.drawio` in Draw.io and move the nodes to where you want them.
+
+If you have more than few systems, **Draw.io" has some options, in the Arrange/Layout menu to automatically arrange the systems.
+I find that the **Organic** Option, with spacing of 200, gave me a good starting arrangement.
+
+Then save the file.
 
 The next time you run Step 4, `veeamdesigner.py` will read the updated positions from `site_a.drawio` and use them in the regenerated script. Your layout is preserved across iterations.
 
