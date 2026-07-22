@@ -204,11 +204,11 @@ cd %PROJECTDIR%\utility\init_db
 
 Run it, passing the database filename:
 
+NB: The `veeamdesigner.db` was created copying the file from `extract_ports` directory.
+
 ```
 python init_db.py -f veeamdesigner.db
 ```
-
-NB: The `veeamdesigner.db` was provided copying the file from `extract_ports` directory.
 
 This will recreate the tables needed in `veeamdesigner.db` and populate `ports_definitions` from `all_ports`.
 
@@ -222,7 +222,7 @@ Navigate to the `portsexplorer` directory:
 cd %PROJECTDIR%\portsexplorer
 ```
 
-NB: The `veeamdesigner.db` was provided copying the file from `init_db` directory.
+NB: The `veeamdesigner.db` was created copying the file from `init_db` directory.
 
 Launch it with:
 
