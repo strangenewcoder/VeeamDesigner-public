@@ -74,6 +74,11 @@ set PYTHONPATH=%PROJECTDIR%\modules
 set STYLES=%PROJECTDIR%\styles
 ```
 
+Deactivate the virtual environment
+```
+call venv\scripts\deactivate.bat
+```
+
 Before running any command in a new shell, run the environment setup script from the root directory of **VeeamDesigner**.
 
 ```
