@@ -474,7 +474,9 @@ python site_a.py
 
 This executes the generated script and writes `site_a.drawio` in the same folder. Open it in Draw.io (desktop or web).
 
-On the first run, nodes are placed automatically: the first node starts at `x=300, y=300`, and each subsequent node is offset by 100 in both axes. The layout will be a diagonal staircase — this is intentional. You will rearrange it manually.
+On the first run, nodes are placed automatically: the first node starts at `x=300, y=300`, and each subsequent node is offset by 100 in both axes.
+The layout will be a diagonal staircase — this is intentional.
+You will rearrange it manually.
 
 ---
 
@@ -483,6 +485,7 @@ On the first run, nodes are placed automatically: the first node starts at `x=30
 Open `site_a.drawio` in Draw.io and move the nodes to where you want them.
 
 If you have more than few systems, **Draw.io" has some options, in the Arrange/Layout menu to automatically arrange the systems.
+
 I find that the **Organic** Option, with spacing of 200, gave me a good starting arrangement.
 
 Then save the file.
